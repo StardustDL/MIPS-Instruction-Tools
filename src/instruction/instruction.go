@@ -24,3 +24,18 @@ const (
 	MASK_IMM16  = 0xffff
 	MASK_IMM26  = 0x3ffffff
 )
+
+func Parse(bits uint32) Instruction {
+	if bits>>SHIFT_OPCODE == 0 {
+		return ParseR(bits)
+	} else {
+		var result Instruction = ParseI(bits)
+		if result.GetToken() != "" {
+			return result
+		}
+
+		result = ParseJ(bits)
+
+		return result
+	}
+}

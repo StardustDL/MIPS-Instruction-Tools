@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"./emulator"
 	"./instruction"
 )
 
@@ -13,6 +14,24 @@ func createTestInstructions() []instruction.Instruction {
 	instrs = append(instrs, instruction.Lw(3, 0, 0x1))
 	instrs = append(instrs, instruction.Add(1, 2, 3))
 	return instrs
+}
+
+func toBin(instrs []instruction.Instruction) []uint32 {
+	result := make([]uint32, 0, len(instrs))
+	for _, instr := range instrs {
+		result = append(result, instr.ToBits())
+	}
+	return result
+}
+
+func testToAndParse(instrs []instruction.Instruction) {
+	for _, instr := range instrs {
+		to := instr.ToBits()
+		parsed := instruction.Parse(to)
+		if parsed.GetToken() != instr.GetToken() {
+			fmt.Println("Error", parsed.GetToken(), instr.GetToken(), instr.ToASM())
+		}
+	}
 }
 
 func outputASMs(instrs []instruction.Instruction) {
@@ -29,9 +48,17 @@ func outputBits(instrs []instruction.Instruction) {
 
 func main() {
 	instrs := createTestInstructions()
+	testToAndParse(instrs)
 	fmt.Println("Asm:")
 	outputASMs(instrs)
 	fmt.Println()
 	fmt.Println("Bit:")
 	outputBits(instrs)
+
+	fmt.Println()
+	fmt.Println("Emulate")
+	fmt.Println("Initialize:", emulator.Initialize(toBin(instrs)))
+	fmt.Println("Execute:", emulator.Execute(0))
+	fmt.Println("Registers")
+	emulator.ShowRegisters()
 }
