@@ -39,3 +39,11 @@ func Parse(bits uint32) Instruction {
 		return result
 	}
 }
+
+func ToBin(instrs []Instruction) []uint32 {
+	result := make([]uint32, 0, len(instrs))
+	for _, instr := range instrs {
+		result = append(result, instr.ToBits())
+	}
+	return result
+}
