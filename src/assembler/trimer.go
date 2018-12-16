@@ -16,12 +16,11 @@ func getSegment(str string) (string, bool) {
 }
 
 func trimLine(str string) string {
-	str = strings.Trim(str, " \t")
 	ind := strings.Index(str, "#")
 	if ind != -1 {
 		str = str[0:ind]
 	}
-	return str
+	return strings.Trim(str, " \t")
 }
 
 func TrimSplitSegment(content []string) map[string][]string {

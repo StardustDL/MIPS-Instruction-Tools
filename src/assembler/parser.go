@@ -1,6 +1,7 @@
 package assembler
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
@@ -21,24 +22,37 @@ type Token struct {
 	symbol string
 }
 
-const regNames = "ATV0V1A0A1A2A3T0T1T2T3T4T5T6T7S0S1S2S3S4S5S6S7T8T9K0K1GPSPFPRA"
+const regNames = "atv0v1a0a1a2a3t0t1t2t3t4t5t6t7s0s1s2s3s4s5s6s7t8t9k0k1gpspfpra"
 
 func getRegisterToken(val string) Token {
-	name := val[1:]
+	name := strings.ToLower(val[1:])
 	id := uint32(0)
 	if unicode.IsDigit(rune(name[0])) {
 		to, _ := strconv.ParseUint(name, 0, 8)
 		id = uint32(to)
+	} else if name == "zero" {
+		id = uint32(0)
 	} else {
-		id = uint32(strings.Index(regNames, name)/2 + 1)
+		ind := strings.Index(regNames, name)
+		if ind != -1 {
+			id = uint32(ind/2 + 1)
+		} else {
+			fmt.Printf("No this register: %s\n", name)
+		}
 	}
 	return Token{TC_REG, id, val}
 }
 
-func getImmToken(val string) Token {
-	to, _ := strconv.ParseInt(val, 0, 32)
-	id := uint32(to)
-	return Token{TC_IMM, id, val}
+func getImmOrSymToken(val string) Token {
+	to, err := strconv.ParseInt(val, 0, 32)
+	if err == nil {
+		id := uint32(to)
+		return Token{TC_IMM, id, val}
+	} else if len(val) == 0 {
+		return Token{TC_IMM, 0, val}
+	} else {
+		return Token{TC_SYMBOL, 0, val}
+	}
 }
 
 func GetTokens(content string) (string, []Token) {
@@ -60,9 +74,9 @@ func GetTokens(content string) (string, []Token) {
 		} else if strings.HasSuffix(val, ")") { // offset($r)
 			as := strings.Split(val[0:len(val)-1], "(")
 			tokens = append(tokens, getRegisterToken(as[1]))
-			tokens = append(tokens, getImmToken(as[0]))
+			tokens = append(tokens, getImmOrSymToken(as[0]))
 		} else { // Imm
-			tokens = append(tokens, getImmToken(val))
+			tokens = append(tokens, getImmOrSymToken(val))
 		}
 	}
 	return strings.ToLower(symbol), tokens
@@ -90,204 +104,241 @@ func assertR(args []Token) bool {
 
 type SymbolResolver func(args []Token) []Token
 
-func Parse(symbol string, args []Token, resolver SymbolResolver) (instruction.Instruction, bool) {
+func Parse(symbol string, args []Token, resolver SymbolResolver, nextPC uint32) (instruction.Instruction, bool) {
 	args = resolver(args)
 	switch symbol {
 	case "add":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Add(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "addu":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Addu(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "addi":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
 		return instruction.Addi(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
 	case "addiu":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
 		return instruction.Addiu(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
 	case "sub":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Sub(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "subu":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Subu(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "and":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.And(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "andi":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
 		return instruction.Andi(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
 	case "or":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Or(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "ori":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
 		return instruction.Ori(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
 	case "nor":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Nor(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "xor":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Xor(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "xori":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
 		return instruction.Xori(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
 	case "slt":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Slt(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "slti":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
 		return instruction.Slti(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
 	case "sltu":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Sltu(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "sltiu":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
 		return instruction.Sltiu(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
 	case "sll":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
 		return instruction.Sll(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "sra":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
 		return instruction.Sra(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "srl":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
 		return instruction.Srl(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "sllv":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Sllv(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "srav":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Srav(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "srlv":
-		if assertRRR(args) {
+		if !assertRRR(args) {
 			break
 		}
 		return instruction.Srlv(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
 	case "beq":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
-		return instruction.Beq(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		return instruction.Beq(uint8(args[0].value), uint8(args[1].value), uint16((args[2].value-nextPC)>>2)), true
 	case "bne":
-		if assertRRI(args) {
+		if !assertRRI(args) {
 			break
 		}
-		return instruction.Bne(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		return instruction.Bne(uint8(args[0].value), uint8(args[1].value), uint16((args[2].value-nextPC)>>2)), true
 	case "bgez":
-		if assertRI(args) {
+		if !assertRI(args) {
 			break
 		}
-		return instruction.Bgez(uint8(args[0].value), uint16(args[1].value)), true
+		return instruction.Bgez(uint8(args[0].value), uint16((args[1].value-nextPC)>>2)), true
 	case "bgezal":
-		if assertRI(args) {
+		if !assertRI(args) {
 			break
 		}
-		return instruction.Bgezal(uint8(args[0].value), uint16(args[1].value)), true
+		return instruction.Bgezal(uint8(args[0].value), uint16((args[1].value-nextPC)>>2)), true
 	case "bgtz":
-		if assertRI(args) {
+		if !assertRI(args) {
 			break
 		}
-		return instruction.Bgtz(uint8(args[0].value), uint16(args[1].value)), true
+		return instruction.Bgtz(uint8(args[0].value), uint16((args[1].value-nextPC)>>2)), true
 	case "blez":
-		if assertRI(args) {
+		if !assertRI(args) {
 			break
 		}
-		return instruction.Blez(uint8(args[0].value), uint16(args[1].value)), true
+		return instruction.Blez(uint8(args[0].value), uint16((args[1].value-nextPC)>>2)), true
 	case "bltz":
-		if assertRI(args) {
+		if !assertRI(args) {
 			break
 		}
-		return instruction.Bltz(uint8(args[0].value), uint16(args[1].value)), true
+		return instruction.Bltz(uint8(args[0].value), uint16((args[1].value-nextPC)>>2)), true
 	case "bltzal":
-		if assertRI(args) {
+		if !assertRI(args) {
 			break
 		}
-		return instruction.Bltzal(uint8(args[0].value), uint16(args[1].value)), true
+		return instruction.Bltzal(uint8(args[0].value), uint16((args[1].value-nextPC)>>2)), true
 	case "j":
-		if assertI(args) {
+		if !assertI(args) {
 			break
 		}
 		return instruction.J(uint32(args[0].value)), true
 	case "jal":
-		if assertI(args) {
+		if !assertI(args) {
 			break
 		}
 		return instruction.Jal(uint32(args[0].value)), true
 	case "jr":
-		if assertR(args) {
+		if !assertR(args) {
 			break
 		}
 		return instruction.Jr(uint8(args[0].value)), true
 	case "lui":
-		if assertRI(args) {
+		if !assertRI(args) {
 			break
 		}
 		return instruction.Lui(uint8(args[0].value), uint16(args[1].value)), true
 	case "lb":
-		if assertRRI(args) {
-			break
+		switch len(args) {
+		case 3:
+			if !assertRRI(args) {
+				break
+			}
+			return instruction.Lb(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		case 2:
+			if !assertRI(args) {
+				break
+			}
+			return instruction.Lb(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
 		}
-		return instruction.Lb(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
 	case "sb":
-		if assertRRI(args) {
-			break
+		switch len(args) {
+		case 3:
+			if !assertRRI(args) {
+				break
+			}
+			return instruction.Sb(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		case 2:
+			if !assertRI(args) {
+				break
+			}
+			return instruction.Sb(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
 		}
-		return instruction.Sb(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
 	case "lw":
-		if assertRRI(args) {
-			break
+		switch len(args) {
+		case 3:
+			if !assertRRI(args) {
+				break
+			}
+			return instruction.Lw(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		case 2:
+			if !assertRI(args) {
+				break
+			}
+			return instruction.Lw(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
 		}
-		return instruction.Lw(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
 	case "sw":
-		if assertRRI(args) {
+		switch len(args) {
+		case 3:
+			if !assertRRI(args) {
+				break
+			}
+			return instruction.Sw(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		case 2:
+			if !assertRI(args) {
+				break
+			}
+			return instruction.Sw(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
+		}
+	case "nop":
+		if len(args) > 0 {
 			break
 		}
-		return instruction.Sw(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		return instruction.Nop(), true
 	}
 	return instruction.Nop(), false
 }

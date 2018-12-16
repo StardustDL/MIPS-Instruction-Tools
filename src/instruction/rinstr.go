@@ -36,7 +36,10 @@ func (this RInstruction) GetToken() string {
 }
 
 func (this RInstruction) ToASM() string {
-	return fmt.Sprintf("%-4s $%d, $%d, $%d", this.Token, this.Rd, this.Rs, this.Rt)
+	if this.Token == "nop" {
+		return fmt.Sprintf("%s", this.Token)
+	}
+	return fmt.Sprintf("%-5s $%d, $%d, $%d", this.Token, this.Rd, this.Rs, this.Rt)
 }
 
 func (this RInstruction) ToBits() uint32 {

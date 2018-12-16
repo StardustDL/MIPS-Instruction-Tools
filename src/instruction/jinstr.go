@@ -18,7 +18,7 @@ func (this JInstruction) GetToken() string {
 }
 
 func (this JInstruction) ToASM() string {
-	return fmt.Sprintf("%-4s %d", this.Token, this.Imm)
+	return fmt.Sprintf("%-5s 0x%x", this.Token, this.Imm<<2)
 }
 
 func (this JInstruction) ToBits() uint32 {
@@ -26,7 +26,7 @@ func (this JInstruction) ToBits() uint32 {
 }
 
 func CreateJ(token string, opcode uint8, imm uint32) JInstruction {
-	return JInstruction{token, opcode & MASK_OPCODE, imm & MASK_IMM26}
+	return JInstruction{token, opcode & MASK_OPCODE, (imm & MASK_IMM26)}
 }
 
 func ParseJ(bits uint32) JInstruction {
@@ -40,9 +40,9 @@ func ParseJ(bits uint32) JInstruction {
 }
 
 func J(imm uint32) JInstruction {
-	return CreateJ("j", OP_J, imm)
+	return CreateJ("j", OP_J, imm>>2)
 }
 
 func Jal(imm uint32) JInstruction {
-	return CreateJ("jal", OP_JAL, imm)
+	return CreateJ("jal", OP_JAL, imm>>2)
 }
