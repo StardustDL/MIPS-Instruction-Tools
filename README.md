@@ -21,6 +21,10 @@ make run
 - addiu
 - sub
 - subu
+- slt
+- sltu
+- slti
+- sltiu
 - and
 - andi
 - or
@@ -46,9 +50,8 @@ make run
 - jal
 - jr
 - lui
+- lb
+- sb
 - lw
 - sw
-- slt
-- sltu
-- slti
-- sltiu
+- nop

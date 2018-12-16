@@ -68,10 +68,6 @@ func initMemory(text []uint32) {
 	emu.Initialize(memory[:])
 }
 
-func createSymbolInText() uint32 {
-	return SEG_TEXT + uint32(len(instrs))
-}
-
 func main() {
 	instrs = createTestInstructions()
 	testToAndParse(instrs)

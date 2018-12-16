@@ -238,6 +238,25 @@ func executeI(instr instruction.IInstruction) bool {
 			advancePC(4)
 			return true
 		}
+	case "lb":
+		if t0, b := getRegister(instr.Rs); b {
+			if t2, b := memoryRead(t0+signext(instr.Imm), 1); b {
+				if setRegister(instr.Rt, t2) {
+					advancePC(4)
+					return true
+				}
+			}
+		}
+	case "sb":
+		if t0, b := getRegister(instr.Rs); b {
+			if t1, b := getRegister(instr.Rt); b {
+				t2 := t0 + signext(instr.Imm)
+				if memoryWrite(t2, 1, t1) {
+					advancePC(4)
+					return true
+				}
+			}
+		}
 	case "lw":
 		if t0, b := getRegister(instr.Rs); b {
 			if t2, b := memoryRead(t0+signext(instr.Imm), 4); b {

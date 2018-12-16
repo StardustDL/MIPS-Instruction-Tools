@@ -41,6 +41,24 @@ func createSymbolInText() uint32 {
 	return SEG_TEXT + uint32(len(instrs))
 }
 
+func ai(instr ins.Instruction) {
+	instrs = append(instrs, instr)
+}
+
+func streq() uint32 {
+	entry := createSymbolInText()
+
+	loop := createSymbolInText()
+
+	ai(ins.Lb(emu.GPR_T0, emu.GPR_A0, 0))
+	ai(ins.Lb(emu.GPR_T1, emu.GPR_A1, 0))
+
+	ai(ins.Or(emu.GPR_T2, emu.GPR_T0, emu.GPR_T1))
+	ai(ins.Beq(emu.GPR_T2,emu.GPR_ZERO,))
+
+	return entry
+}
+
 func main() {
 
 	fmt.Println("Running")

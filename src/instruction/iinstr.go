@@ -17,6 +17,8 @@ const (
 	OP_ORI    = 0x0d
 	OP_XORI   = 0x0e
 	OP_LUI    = 0x0f
+	OP_LB     = 0x20
+	OP_SB     = 0x28
 	OP_LW     = 0x23
 	OP_SW     = 0x2b
 	OP_BEQ    = 0x04
@@ -40,7 +42,7 @@ func (this IInstruction) ToASM() string {
 		return fmt.Sprintf("%-4s $%d, $%d, %d", this.Token, this.Rt, this.Rs, this.Imm)
 	} else if this.Opcode == OP_LUI {
 		return fmt.Sprintf("%-4s $%d, %d", this.Token, this.Rt, this.Imm)
-	} else if this.Opcode == OP_LW || this.Opcode == OP_SW {
+	} else if this.Opcode == OP_LW || this.Opcode == OP_SW || this.Opcode == OP_LB || this.Opcode == OP_SB {
 		return fmt.Sprintf("%-4s $%d, %d($%d)", this.Token, this.Rt, this.Imm, this.Rs)
 	} else if this.Opcode == OP_BGEZ || this.Opcode == OP_BGEZAL || this.Opcode == OP_BLTZ || this.Opcode == OP_BLTZAL || this.Opcode == OP_BLEZ || this.Opcode == OP_BGTZ {
 		return fmt.Sprintf("%-4s $%d, %d", this.Token, this.Rs, this.Imm)
@@ -72,6 +74,10 @@ func ParseI(bits uint32) IInstruction {
 		result.Token = "xori"
 	case OP_LUI:
 		result.Token = "lui"
+	case OP_LB:
+		result.Token = "lb"
+	case OP_SB:
+		result.Token = "sb"
 	case OP_LW:
 		result.Token = "lw"
 	case OP_SW:
@@ -135,11 +141,19 @@ func Sw(rt uint8, rs uint8, imm uint16) IInstruction {
 	return CreateI("sw", OP_SW, rs, rt, imm)
 }
 
-func Beq(rt uint8, rs uint8, imm uint16) IInstruction {
+func Lb(rt uint8, rs uint8, imm uint16) IInstruction {
+	return CreateI("lb", OP_LB, rs, rt, imm)
+}
+
+func Sb(rt uint8, rs uint8, imm uint16) IInstruction {
+	return CreateI("sb", OP_SB, rs, rt, imm)
+}
+
+func Beq(rs uint8, rt uint8, imm uint16) IInstruction {
 	return CreateI("beq", OP_BEQ, rs, rt, imm)
 }
 
-func Bne(rt uint8, rs uint8, imm uint16) IInstruction {
+func Bne(rs uint8, rt uint8, imm uint16) IInstruction {
 	return CreateI("bne", OP_BNE, rs, rt, imm)
 }
 

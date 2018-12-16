@@ -48,6 +48,9 @@ func CreateR(token string, rs uint8, rt uint8, rd uint8, shamt uint8, funct uint
 }
 
 func ParseR(bits uint32) RInstruction {
+	if bits == 0 {
+		return Nop()
+	}
 	result := CreateR("", uint8(bits>>SHIFT_RS), uint8(bits>>SHIFT_RT), uint8(bits>>SHIFT_RD), uint8(bits>>SHIFT_SHAMT), uint8(bits>>SHIFT_FUNCT))
 	switch result.Funct {
 	case FT_ADD:
@@ -128,30 +131,34 @@ func Sltu(rd uint8, rs uint8, rt uint8) RInstruction {
 	return CreateR("sltu", rs, rt, rd, 0x0, FT_SLTU)
 }
 
-func Sll(rd uint8, rs uint8, rt uint8, shamt uint8) RInstruction {
-	return CreateR("sll", rs, rt, rd, shamt, FT_SLL)
+func Sll(rd uint8, rt uint8, shamt uint8) RInstruction {
+	return CreateR("sll", 0x00, rt, rd, shamt, FT_SLL)
 }
 
-func Srl(rd uint8, rs uint8, rt uint8, shamt uint8) RInstruction {
-	return CreateR("srl", rs, rt, rd, shamt, FT_SRL)
+func Srl(rd uint8, rt uint8, shamt uint8) RInstruction {
+	return CreateR("srl", 0x00, rt, rd, shamt, FT_SRL)
 }
 
-func Sra(rd uint8, rs uint8, rt uint8, shamt uint8) RInstruction {
-	return CreateR("sra", rs, rt, rd, shamt, FT_SRA)
+func Sra(rd uint8, rt uint8, shamt uint8) RInstruction {
+	return CreateR("sra", 0x00, rt, rd, shamt, FT_SRA)
 }
 
-func Sllv(rd uint8, rs uint8, rt uint8) RInstruction {
+func Sllv(rd uint8, rt uint8, rs uint8) RInstruction {
 	return CreateR("sllv", rs, rt, rd, 0x0, FT_SLLV)
 }
 
-func Srlv(rd uint8, rs uint8, rt uint8) RInstruction {
+func Srlv(rd uint8, rt uint8, rs uint8) RInstruction {
 	return CreateR("srlv", rs, rt, rd, 0x0, FT_SRLV)
 }
 
-func Srav(rd uint8, rs uint8, rt uint8) RInstruction {
+func Srav(rd uint8, rt uint8, rs uint8) RInstruction {
 	return CreateR("srav", rs, rt, rd, 0x0, FT_SRAV)
 }
 
 func Jr(rs uint8) RInstruction {
 	return CreateR("jr", rs, 0x0, 0x0, 0x0, FT_JR)
+}
+
+func Nop() RInstruction {
+	return CreateR("nop", 0x0, 0x0, 0x0, 0x0, 0x0)
 }
