@@ -6,13 +6,16 @@ import (
 	"../instruction"
 )
 
-var jumped bool
-
 func signext(ori uint16) uint32 {
 	result := uint32(ori)
 	result <<= 16
 	result = uint32(int32(result) >> 16)
 	return result
+}
+
+func advancePC(offset uint32) {
+	pc = npc
+	npc += offset
 }
 
 func executeR(instr instruction.RInstruction) bool {
@@ -22,6 +25,7 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := t0 + t1
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -31,6 +35,7 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := t0 + t1
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -40,6 +45,7 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := t0 - t1
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -49,6 +55,7 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := t0 - t1
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -58,6 +65,7 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := t0 & t1
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -67,6 +75,7 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := t0 | t1
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -76,6 +85,7 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := t0 ^ t1
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -85,6 +95,7 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := ^(t0 | t1)
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -93,10 +104,11 @@ func executeR(instr instruction.RInstruction) bool {
 		if t0, b := getRegister(instr.Rs); b {
 			if t1, b := getRegister(instr.Rt); b {
 				var t2 uint32 = 0
-				if t0 < t1 {
+				if int32(t0) < int32(t1) {
 					t2 = 1
 				}
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -109,6 +121,7 @@ func executeR(instr instruction.RInstruction) bool {
 					t2 = 1
 				}
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -117,6 +130,7 @@ func executeR(instr instruction.RInstruction) bool {
 		if t1, b := getRegister(instr.Rt); b {
 			t2 := t1 << instr.Shamt
 			if setRegister(instr.Rd, t2) {
+				advancePC(1)
 				return true
 			}
 		}
@@ -124,6 +138,7 @@ func executeR(instr instruction.RInstruction) bool {
 		if t1, b := getRegister(instr.Rt); b {
 			t2 := t1 >> instr.Shamt
 			if setRegister(instr.Rd, t2) {
+				advancePC(1)
 				return true
 			}
 		}
@@ -131,6 +146,7 @@ func executeR(instr instruction.RInstruction) bool {
 		if t1, b := getRegister(instr.Rt); b {
 			t2 := uint32(int32(t1) >> instr.Shamt)
 			if setRegister(instr.Rd, t2) {
+				advancePC(1)
 				return true
 			}
 		}
@@ -139,6 +155,7 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := t1 << t0
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -148,6 +165,7 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := t1 >> t0
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -157,14 +175,15 @@ func executeR(instr instruction.RInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := uint32(int32(t1) >> t0)
 				if setRegister(instr.Rd, t2) {
+					advancePC(1)
 					return true
 				}
 			}
 		}
 	case "jr":
 		if t0, b := getRegister(instr.Rs); b {
-			current_instr = t0
-			jumped = true
+			pc = npc
+			npc = t0
 			return true
 		}
 	}
@@ -177,13 +196,15 @@ func executeI(instr instruction.IInstruction) bool {
 		if t0, b := getRegister(instr.Rs); b {
 			t2 := t0 + signext(instr.Imm)
 			if setRegister(instr.Rt, t2) {
+				advancePC(1)
 				return true
 			}
 		}
 	case "addiu":
 		if t0, b := getRegister(instr.Rs); b {
-			t2 := t0 + uint32(instr.Imm)
+			t2 := t0 + signext(instr.Imm)
 			if setRegister(instr.Rt, t2) {
+				advancePC(1)
 				return true
 			}
 		}
@@ -191,6 +212,7 @@ func executeI(instr instruction.IInstruction) bool {
 		if t0, b := getRegister(instr.Rs); b {
 			t2 := t0 & uint32(instr.Imm)
 			if setRegister(instr.Rt, t2) {
+				advancePC(1)
 				return true
 			}
 		}
@@ -198,6 +220,7 @@ func executeI(instr instruction.IInstruction) bool {
 		if t0, b := getRegister(instr.Rs); b {
 			t2 := t0 | uint32(instr.Imm)
 			if setRegister(instr.Rt, t2) {
+				advancePC(1)
 				return true
 			}
 		}
@@ -205,18 +228,21 @@ func executeI(instr instruction.IInstruction) bool {
 		if t0, b := getRegister(instr.Rs); b {
 			t2 := t0 ^ uint32(instr.Imm)
 			if setRegister(instr.Rt, t2) {
+				advancePC(1)
 				return true
 			}
 		}
 	case "lui":
 		t2 := uint32(instr.Imm) << 16
 		if setRegister(instr.Rt, t2) {
+			advancePC(1)
 			return true
 		}
 	case "lw":
 		if t0, b := getRegister(instr.Rs); b {
 			if t2, b := memoryRead(t0 + signext(instr.Imm)); b {
 				if setRegister(instr.Rt, t2) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -226,6 +252,7 @@ func executeI(instr instruction.IInstruction) bool {
 			if t1, b := getRegister(instr.Rt); b {
 				t2 := t0 + signext(instr.Imm)
 				if memoryWrite(t2, t1) {
+					advancePC(1)
 					return true
 				}
 			}
@@ -234,27 +261,92 @@ func executeI(instr instruction.IInstruction) bool {
 		if t0, b := getRegister(instr.Rs); b {
 			if t1, b := getRegister(instr.Rt); b {
 				if t0 == t1 {
-					current_instr = current_instr + 1 + signext(instr.Imm)
-					return true
+					advancePC(signext(instr.Imm))
+				} else {
+					advancePC(1)
 				}
+				return true
 			}
 		}
 	case "bne":
 		if t0, b := getRegister(instr.Rs); b {
 			if t1, b := getRegister(instr.Rt); b {
 				if t0 != t1 {
-					current_instr = current_instr + 1 + signext(instr.Imm)
-					return true
+					advancePC(signext(instr.Imm))
+				} else {
+					advancePC(1)
 				}
+				return true
 			}
+		}
+	case "bgez":
+		if t0, b := getRegister(instr.Rs); b {
+			if t0 >= 0 {
+				advancePC(signext(instr.Imm))
+			} else {
+				advancePC(1)
+			}
+			return true
+		}
+	case "bgezal":
+		if t0, b := getRegister(instr.Rs); b {
+			if t0 >= 0 {
+				if !setRegister(31, npc+1) {
+					return false
+				}
+				advancePC(signext(instr.Imm))
+			} else {
+				advancePC(1)
+			}
+			return true
+		}
+	case "bgtz":
+		if t0, b := getRegister(instr.Rs); b {
+			if t0 > 0 {
+				advancePC(signext(instr.Imm))
+			} else {
+				advancePC(1)
+			}
+			return true
+		}
+	case "bltz":
+		if t0, b := getRegister(instr.Rs); b {
+			if t0 < 0 {
+				advancePC(signext(instr.Imm))
+			} else {
+				advancePC(1)
+			}
+			return true
+		}
+	case "bltzal":
+		if t0, b := getRegister(instr.Rs); b {
+			if t0 < 0 {
+				if !setRegister(31, npc+1) {
+					return false
+				}
+				advancePC(signext(instr.Imm))
+			} else {
+				advancePC(1)
+			}
+			return true
+		}
+	case "blez":
+		if t0, b := getRegister(instr.Rs); b {
+			if t0 <= 0 {
+				advancePC(signext(instr.Imm))
+			} else {
+				advancePC(1)
+			}
+			return true
 		}
 	case "slti":
 		if t0, b := getRegister(instr.Rs); b {
 			var t2 uint32 = 0
-			if t0 < signext(instr.Imm) {
+			if int32(t0) < int32(signext(instr.Imm)) {
 				t2 = 1
 			}
 			if setRegister(instr.Rt, t2) {
+				advancePC(1)
 				return true
 			}
 		}
@@ -265,6 +357,7 @@ func executeI(instr instruction.IInstruction) bool {
 				t2 = 1
 			}
 			if setRegister(instr.Rt, t2) {
+				advancePC(1)
 				return true
 			}
 		}
@@ -275,13 +368,13 @@ func executeI(instr instruction.IInstruction) bool {
 func executeJ(instr instruction.JInstruction) bool {
 	switch instr.Token {
 	case "j":
-		current_instr = instr.Imm
-		jumped = true
+		pc = npc
+		npc = pc + instr.Imm
 		return true
 	case "jal":
-		if setRegister(31, current_instr+1) {
-			current_instr = instr.Imm
-			jumped = true
+		if setRegister(31, npc+1) {
+			pc = npc
+			npc = pc + instr.Imm
 			return true
 		}
 	}
@@ -289,6 +382,7 @@ func executeJ(instr instruction.JInstruction) bool {
 }
 
 func execute(instr instruction.Instruction) bool {
+	fmt.Println(instr.ToASM())
 	switch instr.(type) {
 	case instruction.RInstruction:
 		return executeR(instr.(instruction.RInstruction))
@@ -300,31 +394,30 @@ func execute(instr instruction.Instruction) bool {
 	return false
 }
 
+const END_INSTR = 0xffffffff
+
 func Execute(entry uint32) bool {
-	current_instr = entry
+	pc = entry
+	npc = pc + 1
 	for {
-		jumped = false
-		bits, b := memoryRead(current_instr)
+		bits, b := memoryRead(pc)
 		if !b {
 			return false
 		}
-		if bits == 0 {
+		if bits == END_INSTR {
 			break
 		}
 		instr := instruction.Parse(bits)
 		if !execute(instr) {
 			return false
 		}
-		if !jumped {
-			current_instr++
-		}
 	}
 	return true
 }
 
 func Initialize(bin []uint32) bool {
-	jumped = false
-	current_instr = 0
+	pc = 0
+	npc = 0
 	for i := 0; i < 32; i++ {
 		setRegister(uint8(i), 0)
 	}
@@ -335,6 +428,9 @@ func Initialize(bin []uint32) bool {
 		if !memoryWrite(uint32(i), bits) {
 			return false
 		}
+	}
+	if !memoryWrite(uint32(len(bin)), END_INSTR) {
+		return false
 	}
 	return true
 }

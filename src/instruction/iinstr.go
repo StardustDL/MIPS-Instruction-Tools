@@ -11,18 +11,24 @@ type IInstruction struct {
 }
 
 const (
-	OP_ADDI  = 0x08
-	OP_ADDIU = 0x09
-	OP_ANDI  = 0x0c
-	OP_ORI   = 0x0d
-	OP_XORI  = 0x0e
-	OP_LUI   = 0x0f
-	OP_LW    = 0x23
-	OP_SW    = 0x2b
-	OP_BEQ   = 0x04
-	OP_BNE   = 0x05
-	OP_SLTI  = 0x0a
-	OP_SLTIU = 0x0b
+	OP_ADDI   = 0x08
+	OP_ADDIU  = 0x09
+	OP_ANDI   = 0x0c
+	OP_ORI    = 0x0d
+	OP_XORI   = 0x0e
+	OP_LUI    = 0x0f
+	OP_LW     = 0x23
+	OP_SW     = 0x2b
+	OP_BEQ    = 0x04
+	OP_BNE    = 0x05
+	OP_BGEZ   = 0x01
+	OP_BGEZAL = 0x01
+	OP_BLTZ   = 0x01
+	OP_BLTZAL = 0x01
+	OP_BGTZ   = 0x07
+	OP_BLEZ   = 0x06
+	OP_SLTI   = 0x0a
+	OP_SLTIU  = 0x0b
 )
 
 func (this IInstruction) GetToken() string {
@@ -36,6 +42,8 @@ func (this IInstruction) ToASM() string {
 		return fmt.Sprintf("%-4s $%d, %d", this.Token, this.Rt, this.Imm)
 	} else if this.Opcode == OP_LW || this.Opcode == OP_SW {
 		return fmt.Sprintf("%-4s $%d, %d($%d)", this.Token, this.Rt, this.Imm, this.Rs)
+	} else if this.Opcode == OP_BGEZ || this.Opcode == OP_BGEZAL || this.Opcode == OP_BLTZ || this.Opcode == OP_BLTZAL || this.Opcode == OP_BLEZ || this.Opcode == OP_BGTZ {
+		return fmt.Sprintf("%-4s $%d, %d", this.Token, this.Rs, this.Imm)
 	} else {
 		return "No this instr"
 	}
@@ -51,30 +59,46 @@ func CreateI(token string, Opcode uint8, rs uint8, rt uint8, imm uint16) IInstru
 
 func ParseI(bits uint32) IInstruction {
 	result := CreateI("", uint8(bits>>SHIFT_OPCODE), uint8(bits>>SHIFT_RS), uint8(bits>>SHIFT_RT), uint16(bits>>SHIFT_IMMEDIATE))
-	if result.Opcode == OP_ADDI {
+	switch result.Opcode {
+	case OP_ADDI:
 		result.Token = "addi"
-	} else if result.Opcode == OP_ADDIU {
+	case OP_ADDIU:
 		result.Token = "addiu"
-	} else if result.Opcode == OP_ANDI {
+	case OP_ANDI:
 		result.Token = "andi"
-	} else if result.Opcode == OP_ORI {
+	case OP_ORI:
 		result.Token = "ori"
-	} else if result.Opcode == OP_XORI {
+	case OP_XORI:
 		result.Token = "xori"
-	} else if result.Opcode == OP_LUI {
+	case OP_LUI:
 		result.Token = "lui"
-	} else if result.Opcode == OP_LW {
+	case OP_LW:
 		result.Token = "lw"
-	} else if result.Opcode == OP_SW {
+	case OP_SW:
 		result.Token = "sw"
-	} else if result.Opcode == OP_BEQ {
+	case OP_BEQ:
 		result.Token = "beq"
-	} else if result.Opcode == OP_BNE {
+	case OP_BNE:
 		result.Token = "bne"
-	} else if result.Opcode == OP_SLTI {
+	case OP_SLTI:
 		result.Token = "slti"
-	} else if result.Opcode == OP_SLTIU {
+	case OP_SLTIU:
 		result.Token = "sltiu"
+	case OP_BLEZ:
+		result.Token = "blez"
+	case OP_BGTZ:
+		result.Token = "bgtz"
+	case OP_BGEZ:
+		switch result.Rt {
+		case 0x01:
+			result.Token = "bgez"
+		case 0x11:
+			result.Token = "bgezal"
+		case 0x00:
+			result.Token = "bltz"
+		case 0x20:
+			result.Token = "bltzal"
+		}
 	}
 	return result
 }
@@ -125,4 +149,28 @@ func Slti(rt uint8, rs uint8, imm uint16) IInstruction {
 
 func Sltiu(rt uint8, rs uint8, imm uint16) IInstruction {
 	return CreateI("sltiu", OP_SLTIU, rs, rt, imm)
+}
+
+func Blez(rs uint8, imm uint16) IInstruction {
+	return CreateI("blez", OP_BLEZ, rs, 0x00, imm)
+}
+
+func Bgtz(rs uint8, imm uint16) IInstruction {
+	return CreateI("bgez", OP_BGTZ, rs, 0x00, imm)
+}
+
+func Bgez(rs uint8, imm uint16) IInstruction {
+	return CreateI("bgez", OP_BGEZ, rs, 0x01, imm)
+}
+
+func Bgezal(rs uint8, imm uint16) IInstruction {
+	return CreateI("bgezal", OP_BGEZAL, rs, 0x11, imm)
+}
+
+func Bltz(rs uint8, imm uint16) IInstruction {
+	return CreateI("bltz", OP_BLTZ, rs, 0x00, imm)
+}
+
+func Bltzal(rs uint8, imm uint16) IInstruction {
+	return CreateI("bltzal", OP_BLTZAL, rs, 0x20, imm)
 }

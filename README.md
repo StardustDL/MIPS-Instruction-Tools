@@ -6,9 +6,50 @@ An experimental tool to generate instructions on MIPS architecture (MIPS-32).
 - To try these techniques: Go.
 - Created for [Experimental-MIPS-CPU](https://github.com/StardustDL/Experimental-MIPS-CPU)
 - The emulator's memory is 32bit, which means each address contains a 32 bit data.
+- Some instructions of emulator are from [here](http://www.mrc.uidaho.edu/mrc/people/jff/digital/MIPSir.html) 
 
 # Use
 
 ```sh
 make run
 ```
+
+# Instructions
+
+- add
+- addu
+- addi
+- addiu
+- sub
+- subu
+- and
+- andi
+- or
+- ori
+- nor
+- xor
+- xori
+- sll
+- sllv
+- sra
+- srav
+- srl
+- srlv
+- beq
+- bne
+- bgez
+- bgezal
+- bgtz
+- blez
+- bltz
+- bltzal
+- j
+- jal
+- jr
+- lui
+- lw
+- sw
+- slt
+- sltu
+- slti
+- sltiu

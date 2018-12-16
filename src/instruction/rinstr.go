@@ -11,62 +11,6 @@ type RInstruction struct {
 	Funct uint8
 }
 
-func (this RInstruction) GetToken() string {
-	return this.Token
-}
-
-func (this RInstruction) ToASM() string {
-	return fmt.Sprintf("%-4s $%d, $%d, $%d", this.Token, this.Rd, this.Rs, this.Rt)
-}
-
-func (this RInstruction) ToBits() uint32 {
-	return (uint32(0x0) & MASK_OPCODE << SHIFT_OPCODE) | (uint32(this.Rs) & MASK_REG << SHIFT_RS) | (uint32(this.Rt) & MASK_REG << SHIFT_RT) | (uint32(this.Rd) & MASK_REG << SHIFT_RD) | (uint32(this.Shamt) & MASK_SHAMT << SHIFT_SHAMT) | (uint32(this.Funct) & MASK_FUNCT << SHIFT_FUNCT)
-}
-
-func CreateR(token string, rs uint8, rt uint8, rd uint8, shamt uint8, funct uint8) RInstruction {
-	return RInstruction{token, rs & MASK_REG, rt & MASK_REG, rd & MASK_REG, shamt & MASK_SHAMT, funct & MASK_FUNCT}
-}
-
-func ParseR(bits uint32) RInstruction {
-	result := CreateR("", uint8(bits>>SHIFT_RS), uint8(bits>>SHIFT_RT), uint8(bits>>SHIFT_RD), uint8(bits>>SHIFT_SHAMT), uint8(bits>>SHIFT_FUNCT))
-	if result.Funct == FT_ADD {
-		result.Token = "add"
-	} else if result.Funct == FT_ADDU {
-		result.Token = "addu"
-	} else if result.Funct == FT_SUB {
-		result.Token = "sub"
-	} else if result.Funct == FT_SUBU {
-		result.Token = "subu"
-	} else if result.Funct == FT_AND {
-		result.Token = "and"
-	} else if result.Funct == FT_OR {
-		result.Token = "or"
-	} else if result.Funct == FT_XOR {
-		result.Token = "xor"
-	} else if result.Funct == FT_NOR {
-		result.Token = "nor"
-	} else if result.Funct == FT_SLT {
-		result.Token = "slt"
-	} else if result.Funct == FT_SLTU {
-		result.Token = "sltu"
-	} else if result.Funct == FT_SLL {
-		result.Token = "sll"
-	} else if result.Funct == FT_SRL {
-		result.Token = "srl"
-	} else if result.Funct == FT_SRA {
-		result.Token = "sra"
-	} else if result.Funct == FT_SLLV {
-		result.Token = "sllv"
-	} else if result.Funct == FT_SRLV {
-		result.Token = "srlv"
-	} else if result.Funct == FT_SRAV {
-		result.Token = "srav"
-	} else if result.Funct == FT_JR {
-		result.Token = "jr"
-	}
-	return result
-}
-
 const (
 	FT_ADD  = 0x20
 	FT_ADDU = 0x21
@@ -86,6 +30,63 @@ const (
 	FT_SRAV = 0x07
 	FT_JR   = 0x08
 )
+
+func (this RInstruction) GetToken() string {
+	return this.Token
+}
+
+func (this RInstruction) ToASM() string {
+	return fmt.Sprintf("%-4s $%d, $%d, $%d", this.Token, this.Rd, this.Rs, this.Rt)
+}
+
+func (this RInstruction) ToBits() uint32 {
+	return (uint32(0x0) & MASK_OPCODE << SHIFT_OPCODE) | (uint32(this.Rs) & MASK_REG << SHIFT_RS) | (uint32(this.Rt) & MASK_REG << SHIFT_RT) | (uint32(this.Rd) & MASK_REG << SHIFT_RD) | (uint32(this.Shamt) & MASK_SHAMT << SHIFT_SHAMT) | (uint32(this.Funct) & MASK_FUNCT << SHIFT_FUNCT)
+}
+
+func CreateR(token string, rs uint8, rt uint8, rd uint8, shamt uint8, funct uint8) RInstruction {
+	return RInstruction{token, rs & MASK_REG, rt & MASK_REG, rd & MASK_REG, shamt & MASK_SHAMT, funct & MASK_FUNCT}
+}
+
+func ParseR(bits uint32) RInstruction {
+	result := CreateR("", uint8(bits>>SHIFT_RS), uint8(bits>>SHIFT_RT), uint8(bits>>SHIFT_RD), uint8(bits>>SHIFT_SHAMT), uint8(bits>>SHIFT_FUNCT))
+	switch result.Funct {
+	case FT_ADD:
+		result.Token = "add"
+	case FT_ADDU:
+		result.Token = "addu"
+	case FT_SUB:
+		result.Token = "sub"
+	case FT_SUBU:
+		result.Token = "subu"
+	case FT_AND:
+		result.Token = "and"
+	case FT_OR:
+		result.Token = "or"
+	case FT_XOR:
+		result.Token = "xor"
+	case FT_NOR:
+		result.Token = "nor"
+	case FT_SLT:
+		result.Token = "slt"
+	case FT_SLTU:
+		result.Token = "sltu"
+	case FT_SLL:
+		result.Token = "sll"
+	case FT_SRL:
+		result.Token = "srl"
+	case FT_SRA:
+		result.Token = "sra"
+	case FT_SLLV:
+		result.Token = "sllv"
+	case FT_SRLV:
+		result.Token = "srlv"
+	case FT_SRAV:
+		result.Token = "srav"
+	case FT_JR:
+		result.Token = "jr"
+	}
+	return result
+}
 
 func Add(rd uint8, rs uint8, rt uint8) RInstruction {
 	return CreateR("add", rs, rt, rd, 0x0, FT_ADD)

@@ -5,18 +5,18 @@ import (
 	"strconv"
 
 	"./emulator"
-	"./instruction"
+	ins "./instruction"
 )
 
-func createTestInstructions() []instruction.Instruction {
-	instrs := make([]instruction.Instruction, 0, 1024)
-	instrs = append(instrs, instruction.Lw(2, 0, 0x0))
-	instrs = append(instrs, instruction.Lw(3, 0, 0x1))
-	instrs = append(instrs, instruction.Add(1, 2, 3))
+func createTestInstructions() []ins.Instruction {
+	instrs := make([]ins.Instruction, 0, 1024)
+	instrs = append(instrs, ins.Lw(2, 0, 0x0))
+	instrs = append(instrs, ins.Lw(3, 0, 0x1))
+	instrs = append(instrs, ins.Add(1, 2, 3))
 	return instrs
 }
 
-func toBin(instrs []instruction.Instruction) []uint32 {
+func toBin(instrs []ins.Instruction) []uint32 {
 	result := make([]uint32, 0, len(instrs))
 	for _, instr := range instrs {
 		result = append(result, instr.ToBits())
@@ -24,25 +24,25 @@ func toBin(instrs []instruction.Instruction) []uint32 {
 	return result
 }
 
-func testToAndParse(instrs []instruction.Instruction) {
+func testToAndParse(instrs []ins.Instruction) {
 	for _, instr := range instrs {
 		to := instr.ToBits()
-		parsed := instruction.Parse(to)
+		parsed := ins.Parse(to)
 		if parsed.GetToken() != instr.GetToken() {
 			fmt.Println("Error", parsed.GetToken(), instr.GetToken(), instr.ToASM())
 		}
 	}
 }
 
-func outputASMs(instrs []instruction.Instruction) {
+func outputASMs(instrs []ins.Instruction) {
 	for _, instr := range instrs {
 		fmt.Println(instr.ToASM())
 	}
 }
 
-func outputBits(instrs []instruction.Instruction) {
+func outputBits(instrs []ins.Instruction) {
 	for _, instr := range instrs {
-		fmt.Printf("%032s\n", strconv.FormatUint(uint64(instr.ToBits()), 2))
+		fmt.Printf("%08s\n", strconv.FormatUint(uint64(instr.ToBits()), 16))
 	}
 }
 
