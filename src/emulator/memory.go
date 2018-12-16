@@ -1,6 +1,6 @@
 package emulator
 
-const MEMORY_SIZE uint32 = 1 << 20
+const MEMORY_SIZE uint32 = 0x2000
 
 var memory [MEMORY_SIZE]uint8
 

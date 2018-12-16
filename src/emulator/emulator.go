@@ -186,6 +186,9 @@ func executeR(instr instruction.RInstruction) bool {
 			npc = t0
 			return true
 		}
+	case "nop":
+		advancePC(4)
+		return true
 	}
 	return false
 }

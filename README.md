@@ -7,6 +7,10 @@ An experimental tool to generate instructions on MIPS architecture (MIPS-32).
 - Created for [Experimental-MIPS-CPU](https://github.com/StardustDL/Experimental-MIPS-CPU)
 - Some instructions of emulator are from [here](http://www.mrc.uidaho.edu/mrc/people/jff/digital/MIPSir.html) 
 
+Now, this project contains another two tools:
+- Assembler for MIPS-32 architecture
+- Emulator for MIPS-32 architecture
+
 # Use
 
 ```sh

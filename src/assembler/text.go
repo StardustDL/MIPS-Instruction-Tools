@@ -55,7 +55,7 @@ func getImmOrSymToken(val string) Token {
 	}
 }
 
-func GetTokens(content string) (string, []Token) {
+func getTextTokens(content string) (string, []Token) {
 	content = trimLine(content)
 	if len(content) == 0 {
 		return "", make([]Token, 0)
@@ -104,7 +104,7 @@ func assertR(args []Token) bool {
 
 type SymbolResolver func(args []Token) []Token
 
-func Parse(symbol string, args []Token, resolver SymbolResolver, nextPC uint32) (instruction.Instruction, bool) {
+func TextParse(symbol string, args []Token, resolver SymbolResolver, nextPC uint32) (instruction.Instruction, bool) {
 	args = resolver(args)
 	switch symbol {
 	case "add":
