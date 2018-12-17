@@ -2,21 +2,16 @@
 
 main:
 jal read
-lui $a1,str_test
-lui $a2,str_hello
-addiu $a1,$a1,0x1800
-addiu $a2,$a2,0
+nop
+li $a1,str_test
+li $a2,0x0800
 jal streq
 nop
-bne $v0,$zero,hello_world
+beq $v0,$zero,main
 nop
-hello_world:
-lui $a1,0x00000000
-addiu $a1,$a1,0x1800
-jal write
-nop
-j main
-nop
+main_end:
+addi $v0,$zero,10
+syscall
 
 streq: # compare string s1 and s2
 streq_loop:
@@ -36,7 +31,7 @@ addiu $v0,$zero,0
 jr $ra
 nop
 streq_eq:
-addiu $v0,$zero,1
+li $v0,10
 jr $ra
 nop
 
@@ -55,18 +50,10 @@ jr $ra
 nop
 
 read:
-read_before:
-lb $t1,0x0000
-beq $t1,$zero,read_before
-nop
-j read_main
-nop
-read_main:
-lui $a1,0x0000
-lui $a2,0x1800
-jal strcpy
-nop
-sb $zero,0x0000
+li $a0,0x0800
+li $a1,0x0010
+li $v0,8
+syscall
 jr $ra
 nop
 

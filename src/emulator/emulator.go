@@ -189,6 +189,12 @@ func executeR(instr instruction.RInstruction) bool {
 	case "nop":
 		advancePC(4)
 		return true
+	case "syscall":
+		if t0, b := getRegister(instruction.GPR_V0); b {
+			doSystemCall(t0)
+			advancePC(4)
+		}
+		return true
 	}
 	return false
 }
@@ -416,9 +422,12 @@ func execute(instr instruction.Instruction) bool {
 	return false
 }
 
-const END_INSTR uint32 = 0xffffffff
-
 func Execute(entry uint32) bool {
+	if state != MEMU_INITIALIZED {
+		fmt.Println("Not initialized")
+		return false
+	}
+	state = MEMU_RUNNING
 	pc = entry
 	npc = pc + 4
 	for {
@@ -426,18 +435,19 @@ func Execute(entry uint32) bool {
 		if !b {
 			return false
 		}
-		if bits == END_INSTR {
-			break
-		}
 		instr := instruction.Parse(bits)
 		if !execute(instr) {
 			return false
+		}
+		if state != MEMU_RUNNING {
+			break
 		}
 	}
 	return true
 }
 
 func Initialize(bin []uint8) bool {
+	state = MEMU_EXITED
 	pc = 0
 	npc = 0
 	for i := 0; i < 32; i++ {
@@ -448,9 +458,11 @@ func Initialize(bin []uint8) bool {
 	}
 	for i, bits := range bin {
 		if !memoryWrite(uint32(i), 1, uint32(bits)) {
+			println(i, bits)
 			return false
 		}
 	}
+	state = MEMU_INITIALIZED
 	return true
 }
 

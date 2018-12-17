@@ -38,14 +38,16 @@ func (this IInstruction) GetToken() string {
 }
 
 func (this IInstruction) ToASM() string {
-	if this.Opcode == OP_ADDI || this.Opcode == OP_ADDIU || this.Opcode == OP_ANDI || this.Opcode == OP_ORI || this.Opcode == OP_XORI || this.Opcode == OP_BEQ || this.Opcode == OP_BNE || this.Opcode == OP_SLTI || this.Opcode == OP_SLTIU {
-		return fmt.Sprintf("%-5s $%d, $%d, 0x%x", this.Token, this.Rt, this.Rs, this.Imm)
-	} else if this.Opcode == OP_LUI {
-		return fmt.Sprintf("%-5s $%d, 0x%x", this.Token, this.Rt, this.Imm)
+	if this.Opcode == OP_ADDI || this.Opcode == OP_ADDIU || this.Opcode == OP_ANDI || this.Opcode == OP_ORI || this.Opcode == OP_XORI || this.Opcode == OP_SLTI || this.Opcode == OP_SLTIU {
+		return fmt.Sprintf("%-7s $%d, $%d, 0x%x", this.Token, this.Rt, this.Rs, this.Imm)
+	} else if this.Opcode == OP_BEQ || this.Opcode == OP_BNE {
+		return fmt.Sprintf("%-7s $%d, $%d, 0x%x", this.Token, this.Rs, this.Rt, this.Imm)
+	}else if this.Opcode == OP_LUI {
+		return fmt.Sprintf("%-7s $%d, 0x%x", this.Token, this.Rt, this.Imm)
 	} else if this.Opcode == OP_LW || this.Opcode == OP_SW || this.Opcode == OP_LB || this.Opcode == OP_SB {
-		return fmt.Sprintf("%-5s $%d, 0x%x($%d)", this.Token, this.Rt, this.Imm, this.Rs)
+		return fmt.Sprintf("%-7s $%d, 0x%x($%d)", this.Token, this.Rt, this.Imm, this.Rs)
 	} else if this.Opcode == OP_BGEZ || this.Opcode == OP_BGEZAL || this.Opcode == OP_BLTZ || this.Opcode == OP_BLTZAL || this.Opcode == OP_BLEZ || this.Opcode == OP_BGTZ {
-		return fmt.Sprintf("%-5s $%d, 0x%x", this.Token, this.Rs, this.Imm)
+		return fmt.Sprintf("%-7s $%d, 0x%x", this.Token, this.Rs, this.Imm)
 	} else {
 		return "No this instr"
 	}

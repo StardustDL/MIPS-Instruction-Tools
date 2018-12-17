@@ -18,7 +18,7 @@ func (this JInstruction) GetToken() string {
 }
 
 func (this JInstruction) ToASM() string {
-	return fmt.Sprintf("%-5s 0x%x", this.Token, this.Imm<<2)
+	return fmt.Sprintf("%-7s 0x%x", this.Token, this.Imm<<2)
 }
 
 func (this JInstruction) ToBits() uint32 {

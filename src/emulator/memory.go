@@ -24,7 +24,7 @@ func memoryWrite(addr uint32, len uint8, val uint32) bool {
 	if !(len == 1 || len == 2 || len == 4) {
 		return false
 	}
-	if addr+uint32(len) >= MEMORY_SIZE {
+	if addr+uint32(len) > MEMORY_SIZE {
 		return false
 	}
 	val &= _MASK_BYTE[len]

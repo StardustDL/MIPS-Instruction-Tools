@@ -22,6 +22,11 @@ type Token struct {
 	symbol string
 }
 
+type InstructionSyntax struct {
+	symbol string
+	args   []Token
+}
+
 const regNames = "atv0v1a0a1a2a3t0t1t2t3t4t5t6t7s0s1s2s3s4s5s6s7t8t9k0k1gpspfpra"
 
 func getRegisterToken(val string) Token {
@@ -55,14 +60,14 @@ func getImmOrSymToken(val string) Token {
 	}
 }
 
-func getTextTokens(content string) (string, []Token) {
+func getTextTokens(content string) InstructionSyntax {
 	content = trimLine(content)
 	if len(content) == 0 {
-		return "", make([]Token, 0)
+		return InstructionSyntax{"", make([]Token, 0)}
 	}
 	indexSpace := strings.Index(content, " ")
 	if indexSpace == -1 {
-		return content, make([]Token, 0)
+		return InstructionSyntax{content, make([]Token, 0)}
 	}
 	symbol, rem := content[0:indexSpace], content[indexSpace+1:]
 	args := strings.Split(rem, ",")
@@ -79,7 +84,7 @@ func getTextTokens(content string) (string, []Token) {
 			tokens = append(tokens, getImmOrSymToken(val))
 		}
 	}
-	return strings.ToLower(symbol), tokens
+	return InstructionSyntax{strings.ToLower(symbol), tokens}
 }
 
 func assertRRR(args []Token) bool {
@@ -104,9 +109,66 @@ func assertR(args []Token) bool {
 
 type SymbolResolver func(args []Token) []Token
 
-func TextParse(symbol string, args []Token, resolver SymbolResolver, nextPC uint32) (instruction.Instruction, bool) {
-	args = resolver(args)
-	switch symbol {
+func TextPreprocess(content []string, resolver SymbolResolver, config AssembleConfig) ([]InstructionSyntax, map[string]uint32, bool) {
+	currentAddr := uint32(config.Text)
+	syntaxs := make([]InstructionSyntax, 0, len(content))
+	symbolTable := make(map[string]uint32)
+	flg := true
+	for _, str := range content {
+		if strings.HasSuffix(str, ":") {
+			name := str[0 : len(str)-1]
+			_, exists := symbolTable[name]
+			if exists {
+				flg = false
+				fmt.Printf("Symbol %s has been defined.\n", name)
+				break
+			}
+			symbolTable[name] = currentAddr
+			continue
+		} else {
+			syntax := getTextTokens(str)
+			syntax.args = resolver(syntax.args)
+			tosyn, ok := textPreprocessOne(syntax)
+			if !ok {
+				flg = false
+				fmt.Printf("Preprocessing failed: %s\n", str)
+				break
+			}
+			for _, v := range tosyn {
+				syntaxs = append(syntaxs, v)
+				currentAddr += 4
+			}
+		}
+	}
+	return syntaxs, symbolTable, flg
+}
+
+func textPreprocessOne(syntax InstructionSyntax) ([]InstructionSyntax, bool) {
+	switch syntax.symbol {
+	case "li": // extra instr
+		if !assertRI(syntax.args) {
+			break
+		}
+		return []InstructionSyntax{
+			InstructionSyntax{"lui", []Token{
+				Token{class: TC_REG, value: uint32(instruction.GPR_AT)},
+				Token{class: TC_IMM, value: syntax.args[1].value >> 16}}},
+			InstructionSyntax{"ori", []Token{
+				Token{class: TC_REG, value: uint32(syntax.args[0].value)},
+				Token{class: TC_REG, value: uint32(instruction.GPR_AT)},
+				Token{class: TC_IMM, value: syntax.args[1].value & 0xffff}}}}, true
+	case "":
+		break
+	default:
+		return []InstructionSyntax{syntax}, true
+
+	}
+	return []InstructionSyntax{syntax}, false
+}
+
+func TextParse(syntax InstructionSyntax, resolver SymbolResolver, nextPC uint32) (instruction.Instruction, bool) {
+	args := resolver(syntax.args)
+	switch syntax.symbol {
 	case "add":
 		if !assertRRR(args) {
 			break
@@ -339,6 +401,11 @@ func TextParse(symbol string, args []Token, resolver SymbolResolver, nextPC uint
 			break
 		}
 		return instruction.Nop(), true
+	case "syscall":
+		if len(args) > 0 {
+			break
+		}
+		return instruction.Syscall(), true
 	}
 	return instruction.Nop(), false
 }

@@ -30,10 +30,6 @@ func initMemory(text []uint32) {
 			memory[SEG_TEXT+(uint32(i)<<2)+j] = uint8(bits >> (j << 3) & 0xff)
 		}
 	}
-	for j := uint32(0); j < 4; j++ {
-		memory[SEG_TEXT+(uint32(len(text))<<2)+j] = uint8(emu.END_INSTR >> (j << 3) & 0xff)
-	}
-
 	emu.Initialize(memory[:])
 }
 

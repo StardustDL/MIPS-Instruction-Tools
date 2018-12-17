@@ -2,15 +2,14 @@ package assembler
 
 import (
 	"fmt"
-	"strings"
+	// "strings"
 
 	"../instruction"
 )
 
 type AssembleConfig struct {
-	Data           uint32
-	Text           uint32
-	EndInstruction uint32
+	Data uint32
+	Text uint32
 }
 
 func getInstruction(text string) instruction.Instruction {
@@ -20,50 +19,64 @@ func getInstruction(text string) instruction.Instruction {
 func buildText(content []string, config AssembleConfig, symbolTable map[string]uint32) ([]instruction.Instruction, bool) {
 	result := make([]instruction.Instruction, 0)
 	flg := true
-	currentAddr := uint32(config.Text)
-	for _, str := range content {
-		if strings.HasSuffix(str, ":") {
-			name := str[0 : len(str)-1]
-			_, exists := symbolTable[name]
-			if exists {
-				flg = false
-				fmt.Printf("Symbol %s has been defined.\n", name)
-				break
-			}
-			symbolTable[name] = currentAddr
-			continue
-		}
-		currentAddr += 4
-	}
 
-	symbolRes := func(args []Token) []Token {
+	symbolResWithoutError := func(args []Token) []Token {
 		for i, item := range args {
 			if item.class == TC_SYMBOL {
 				val, ok := symbolTable[item.symbol]
 				if ok {
 					args[i] = Token{TC_IMM, val, item.symbol}
 				} else {
-					fmt.Printf("No this symbol: %s\n", item.symbol)
+
 				}
 			}
 		}
 		return args
 	}
 
-	currentAddr = uint32(config.Text)
-	for _, str := range content {
-		if strings.HasSuffix(str, ":") {
-			continue
+	syntaxs, textSymbols, ok := TextPreprocess(content, symbolResWithoutError, config)
+
+	if ok {
+		for k, v := range textSymbols {
+			_, exists := symbolTable[k]
+			if exists {
+				flg = false
+				fmt.Printf("Symbol %s has been defined.\n", k)
+				break
+			}
+			symbolTable[k] = v
 		}
-		symbol, tokens := getTextTokens(str)
-		res, ok := TextParse(symbol, tokens, symbolRes, currentAddr+4)
-		if !ok {
-			flg = false
-			fmt.Printf("Parse failed: %s\n", str)
-			break
+	} else {
+		fmt.Printf("Text prepocessing failed.\n")
+		flg = false
+	}
+
+	if flg {
+		symbolRes := func(args []Token) []Token {
+			for i, item := range args {
+				if item.class == TC_SYMBOL {
+					val, ok := symbolTable[item.symbol]
+					if ok {
+						args[i] = Token{TC_IMM, val, item.symbol}
+					} else {
+						fmt.Printf("No this symbol: %s\n", item.symbol)
+					}
+				}
+			}
+			return args
 		}
-		result = append(result, res)
-		currentAddr += 4
+
+		currentAddr := uint32(config.Text)
+		for _, syn := range syntaxs {
+			res, ok := TextParse(syn, symbolRes, currentAddr+4)
+			if !ok {
+				flg = false
+				fmt.Printf("Parse failed: %s\n", syn.symbol)
+				break
+			}
+			result = append(result, res)
+			currentAddr += 4
+		}
 	}
 	return result, flg
 }
@@ -122,9 +135,6 @@ func Assemble(content []string, config AssembleConfig, size int32) ([]instructio
 				for j := uint32(0); j < 4; j++ {
 					result[config.Text+(uint32(i)<<2)+j] = uint8(bits >> (j << 3) & 0xff)
 				}
-			}
-			for j := uint32(0); j < 4; j++ {
-				result[config.Text+(uint32(len(instrs))<<2)+j] = uint8(config.EndInstruction >> (j << 3) & 0xff)
 			}
 		}
 	}

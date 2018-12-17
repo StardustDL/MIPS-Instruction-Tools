@@ -12,23 +12,24 @@ type RInstruction struct {
 }
 
 const (
-	FT_ADD  = 0x20
-	FT_ADDU = 0x21
-	FT_SUB  = 0x22
-	FT_SUBU = 0x23
-	FT_AND  = 0x24
-	FT_OR   = 0x25
-	FT_XOR  = 0x26
-	FT_NOR  = 0x27
-	FT_SLT  = 0x2a
-	FT_SLTU = 0x2b
-	FT_SLL  = 0x00
-	FT_SRL  = 0x02
-	FT_SRA  = 0x03
-	FT_SLLV = 0x04
-	FT_SRLV = 0x06
-	FT_SRAV = 0x07
-	FT_JR   = 0x08
+	FT_ADD     = 0x20
+	FT_ADDU    = 0x21
+	FT_SUB     = 0x22
+	FT_SUBU    = 0x23
+	FT_AND     = 0x24
+	FT_OR      = 0x25
+	FT_XOR     = 0x26
+	FT_NOR     = 0x27
+	FT_SLT     = 0x2a
+	FT_SLTU    = 0x2b
+	FT_SLL     = 0x00
+	FT_SRL     = 0x02
+	FT_SRA     = 0x03
+	FT_SLLV    = 0x04
+	FT_SRLV    = 0x06
+	FT_SRAV    = 0x07
+	FT_JR      = 0x08
+	FT_SYSCALL = 0x0a
 )
 
 func (this RInstruction) GetToken() string {
@@ -36,10 +37,12 @@ func (this RInstruction) GetToken() string {
 }
 
 func (this RInstruction) ToASM() string {
-	if this.Token == "nop" {
-		return fmt.Sprintf("%s", this.Token)
+	if this.Token == "nop" || this.Token == "syscall" {
+		return fmt.Sprintf("%-7s", this.Token)
+	} else if this.Token == "jr" {
+		return fmt.Sprintf("%-7s $%d", this.Token, this.Rs)
 	}
-	return fmt.Sprintf("%-5s $%d, $%d, $%d", this.Token, this.Rd, this.Rs, this.Rt)
+	return fmt.Sprintf("%-7s $%d, $%d, $%d", this.Token, this.Rd, this.Rs, this.Rt)
 }
 
 func (this RInstruction) ToBits() uint32 {
@@ -90,6 +93,8 @@ func ParseR(bits uint32) RInstruction {
 		result.Token = "srav"
 	case FT_JR:
 		result.Token = "jr"
+	case FT_SYSCALL:
+		result.Token = "syscall"
 	}
 	return result
 }
@@ -164,4 +169,8 @@ func Jr(rs uint8) RInstruction {
 
 func Nop() RInstruction {
 	return CreateR("nop", 0x0, 0x0, 0x0, 0x0, 0x0)
+}
+
+func Syscall() RInstruction {
+	return CreateR("syscall", 0x0, 0x0, 0x0, 0x0, FT_SYSCALL)
 }
