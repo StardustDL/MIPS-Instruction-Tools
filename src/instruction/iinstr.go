@@ -18,8 +18,12 @@ const (
 	OP_XORI   = 0x0e
 	OP_LUI    = 0x0f
 	OP_LB     = 0x20
-	OP_SB     = 0x28
+	OP_LH     = 0x21
 	OP_LW     = 0x23
+	OP_LBU    = 0x24
+	OP_LHU    = 0x25
+	OP_SB     = 0x28
+	OP_SH     = 0x29
 	OP_SW     = 0x2b
 	OP_BEQ    = 0x04
 	OP_BNE    = 0x05
@@ -42,9 +46,9 @@ func (this IInstruction) ToASM() string {
 		return fmt.Sprintf("%-7s $%d, $%d, 0x%x", this.Token, this.Rt, this.Rs, this.Imm)
 	} else if this.Opcode == OP_BEQ || this.Opcode == OP_BNE {
 		return fmt.Sprintf("%-7s $%d, $%d, 0x%x", this.Token, this.Rs, this.Rt, this.Imm)
-	}else if this.Opcode == OP_LUI {
+	} else if this.Opcode == OP_LUI {
 		return fmt.Sprintf("%-7s $%d, 0x%x", this.Token, this.Rt, this.Imm)
-	} else if this.Opcode == OP_LW || this.Opcode == OP_SW || this.Opcode == OP_LB || this.Opcode == OP_SB {
+	} else if this.Opcode == OP_LW || this.Opcode == OP_SW || this.Opcode == OP_LB || this.Opcode == OP_SB || this.Opcode == OP_LBU || this.Opcode == OP_LH || this.Opcode == OP_LHU || this.Opcode == OP_SH {
 		return fmt.Sprintf("%-7s $%d, 0x%x($%d)", this.Token, this.Rt, this.Imm, this.Rs)
 	} else if this.Opcode == OP_BGEZ || this.Opcode == OP_BGEZAL || this.Opcode == OP_BLTZ || this.Opcode == OP_BLTZAL || this.Opcode == OP_BLEZ || this.Opcode == OP_BGTZ {
 		return fmt.Sprintf("%-7s $%d, 0x%x", this.Token, this.Rs, this.Imm)
@@ -78,12 +82,20 @@ func ParseI(bits uint32) IInstruction {
 		result.Token = "lui"
 	case OP_LB:
 		result.Token = "lb"
+	case OP_LBU:
+		result.Token = "lbu"
+	case OP_LH:
+		result.Token = "lh"
+	case OP_LHU:
+		result.Token = "lhu"
 	case OP_SB:
 		result.Token = "sb"
 	case OP_LW:
 		result.Token = "lw"
 	case OP_SW:
 		result.Token = "sw"
+	case OP_SH:
+		result.Token = "sh"
 	case OP_BEQ:
 		result.Token = "beq"
 	case OP_BNE:
@@ -143,8 +155,24 @@ func Sw(rt uint8, rs uint8, imm uint16) IInstruction {
 	return CreateI("sw", OP_SW, rs, rt, imm)
 }
 
+func Sh(rt uint8, rs uint8, imm uint16) IInstruction {
+	return CreateI("sh", OP_SH, rs, rt, imm)
+}
+
 func Lb(rt uint8, rs uint8, imm uint16) IInstruction {
 	return CreateI("lb", OP_LB, rs, rt, imm)
+}
+
+func Lbu(rt uint8, rs uint8, imm uint16) IInstruction {
+	return CreateI("lbu", OP_LBU, rs, rt, imm)
+}
+
+func Lh(rt uint8, rs uint8, imm uint16) IInstruction {
+	return CreateI("lh", OP_LH, rs, rt, imm)
+}
+
+func Lhu(rt uint8, rs uint8, imm uint16) IInstruction {
+	return CreateI("lhu", OP_LHU, rs, rt, imm)
 }
 
 func Sb(rt uint8, rs uint8, imm uint16) IInstruction {

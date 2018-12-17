@@ -8,10 +8,13 @@ import (
 
 var isDebug bool
 
-func signext(ori uint16) uint32 {
+func signext(ori uint32, len uint8) uint32 {
+	if !(len == 1 || len == 2 || len == 4) {
+		panic("signext: Len error")
+	}
 	result := uint32(ori)
-	result <<= 16
-	result = uint32(int32(result) >> 16)
+	result <<= len << 3
+	result = uint32(int32(result) >> (len << 3))
 	return result
 }
 
@@ -188,6 +191,14 @@ func executeR(instr instruction.RInstruction) bool {
 			npc = t0
 			return true
 		}
+	case "jalr":
+		if t0, b := getRegister(instr.Rs); b {
+			if setRegister(instr.Rd, npc+4) {
+				pc = npc
+				npc = t0
+				return true
+			}
+		}
 	case "nop":
 		advancePC(4)
 		return true
@@ -205,7 +216,7 @@ func executeI(instr instruction.IInstruction) bool {
 	switch instr.Token {
 	case "addi":
 		if t0, b := getRegister(instr.Rs); b {
-			t2 := t0 + signext(instr.Imm)
+			t2 := t0 + signext(uint32(instr.Imm), 2)
 			if setRegister(instr.Rt, t2) {
 				advancePC(4)
 				return true
@@ -213,7 +224,7 @@ func executeI(instr instruction.IInstruction) bool {
 		}
 	case "addiu":
 		if t0, b := getRegister(instr.Rs); b {
-			t2 := t0 + signext(instr.Imm)
+			t2 := t0 + signext(uint32(instr.Imm), 2)
 			if setRegister(instr.Rt, t2) {
 				advancePC(4)
 				return true
@@ -251,7 +262,36 @@ func executeI(instr instruction.IInstruction) bool {
 		}
 	case "lb":
 		if t0, b := getRegister(instr.Rs); b {
-			if t2, b := memoryRead(t0+signext(instr.Imm), 1); b {
+			if t2, b := memoryRead(t0+signext(uint32(instr.Imm), 2), 1); b {
+				t2 = signext(t2, 1)
+				if setRegister(instr.Rt, t2) {
+					advancePC(4)
+					return true
+				}
+			}
+		}
+	case "lbu":
+		if t0, b := getRegister(instr.Rs); b {
+			if t2, b := memoryRead(t0+signext(uint32(instr.Imm), 2), 1); b {
+				if setRegister(instr.Rt, t2) {
+					advancePC(4)
+					return true
+				}
+			}
+		}
+	case "lh":
+		if t0, b := getRegister(instr.Rs); b {
+			if t2, b := memoryRead(t0+signext(uint32(instr.Imm), 2), 2); b {
+				t2 = signext(t2, 2)
+				if setRegister(instr.Rt, t2) {
+					advancePC(4)
+					return true
+				}
+			}
+		}
+	case "lhu":
+		if t0, b := getRegister(instr.Rs); b {
+			if t2, b := memoryRead(t0+signext(uint32(instr.Imm), 2), 2); b {
 				if setRegister(instr.Rt, t2) {
 					advancePC(4)
 					return true
@@ -261,7 +301,7 @@ func executeI(instr instruction.IInstruction) bool {
 	case "sb":
 		if t0, b := getRegister(instr.Rs); b {
 			if t1, b := getRegister(instr.Rt); b {
-				t2 := t0 + signext(instr.Imm)
+				t2 := t0 + signext(uint32(instr.Imm),2)
 				if memoryWrite(t2, 1, t1) {
 					advancePC(4)
 					return true
@@ -270,7 +310,7 @@ func executeI(instr instruction.IInstruction) bool {
 		}
 	case "lw":
 		if t0, b := getRegister(instr.Rs); b {
-			if t2, b := memoryRead(t0+signext(instr.Imm), 4); b {
+			if t2, b := memoryRead(t0+signext(uint32(instr.Imm),2), 4); b {
 				if setRegister(instr.Rt, t2) {
 					advancePC(4)
 					return true
@@ -280,8 +320,18 @@ func executeI(instr instruction.IInstruction) bool {
 	case "sw":
 		if t0, b := getRegister(instr.Rs); b {
 			if t1, b := getRegister(instr.Rt); b {
-				t2 := t0 + signext(instr.Imm)
+				t2 := t0 + signext(uint32(instr.Imm),2)
 				if memoryWrite(t2, 4, t1) {
+					advancePC(4)
+					return true
+				}
+			}
+		}
+	case "sh":
+		if t0, b := getRegister(instr.Rs); b {
+			if t1, b := getRegister(instr.Rt); b {
+				t2 := t0 + signext(uint32(instr.Imm),2)
+				if memoryWrite(t2, 2, t1) {
 					advancePC(4)
 					return true
 				}
@@ -291,7 +341,7 @@ func executeI(instr instruction.IInstruction) bool {
 		if t0, b := getRegister(instr.Rs); b {
 			if t1, b := getRegister(instr.Rt); b {
 				if t0 == t1 {
-					advancePC(signext(instr.Imm) << 2)
+					advancePC(signext(uint32(instr.Imm),2) << 2)
 				} else {
 					advancePC(4)
 				}
@@ -302,7 +352,7 @@ func executeI(instr instruction.IInstruction) bool {
 		if t0, b := getRegister(instr.Rs); b {
 			if t1, b := getRegister(instr.Rt); b {
 				if t0 != t1 {
-					advancePC(signext(instr.Imm) << 2)
+					advancePC(signext(uint32(instr.Imm),2) << 2)
 				} else {
 					advancePC(4)
 				}
@@ -312,7 +362,7 @@ func executeI(instr instruction.IInstruction) bool {
 	case "bgez":
 		if t0, b := getRegister(instr.Rs); b {
 			if t0 >= 0 {
-				advancePC(signext(instr.Imm) << 2)
+				advancePC(signext(uint32(instr.Imm),2) << 2)
 			} else {
 				advancePC(4)
 			}
@@ -324,7 +374,7 @@ func executeI(instr instruction.IInstruction) bool {
 				if !setRegister(31, npc+4) {
 					return false
 				}
-				advancePC(signext(instr.Imm) << 2)
+				advancePC(signext(uint32(instr.Imm),2) << 2)
 			} else {
 				advancePC(4)
 			}
@@ -333,7 +383,7 @@ func executeI(instr instruction.IInstruction) bool {
 	case "bgtz":
 		if t0, b := getRegister(instr.Rs); b {
 			if t0 > 0 {
-				advancePC(signext(instr.Imm) << 2)
+				advancePC(signext(uint32(instr.Imm),2) << 2)
 			} else {
 				advancePC(4)
 			}
@@ -342,7 +392,7 @@ func executeI(instr instruction.IInstruction) bool {
 	case "bltz":
 		if t0, b := getRegister(instr.Rs); b {
 			if t0 < 0 {
-				advancePC(signext(instr.Imm) << 2)
+				advancePC(signext(uint32(instr.Imm),2) << 2)
 			} else {
 				advancePC(4)
 			}
@@ -354,7 +404,7 @@ func executeI(instr instruction.IInstruction) bool {
 				if !setRegister(31, npc+4) {
 					return false
 				}
-				advancePC(signext(instr.Imm) << 2)
+				advancePC(signext(uint32(instr.Imm),2) << 2)
 			} else {
 				advancePC(4)
 			}
@@ -363,7 +413,7 @@ func executeI(instr instruction.IInstruction) bool {
 	case "blez":
 		if t0, b := getRegister(instr.Rs); b {
 			if t0 <= 0 {
-				advancePC(signext(instr.Imm) << 2)
+				advancePC(signext(uint32(instr.Imm),2) << 2)
 			} else {
 				advancePC(4)
 			}
@@ -372,7 +422,7 @@ func executeI(instr instruction.IInstruction) bool {
 	case "slti":
 		if t0, b := getRegister(instr.Rs); b {
 			var t2 uint32 = 0
-			if int32(t0) < int32(signext(instr.Imm)) {
+			if int32(t0) < int32(signext(uint32(instr.Imm),2)) {
 				t2 = 1
 			}
 			if setRegister(instr.Rt, t2) {
@@ -426,7 +476,7 @@ func executeOne(instr instruction.Instruction) bool {
 	return false
 }
 
-func Execute(entry uint32,isdebug bool) bool {
+func Execute(entry uint32, isdebug bool) bool {
 	if state != MEMU_INITIALIZED {
 		fmt.Println("Not initialized")
 		return false
@@ -475,8 +525,8 @@ func ShowRegisters() {
 	for i := 0; i < 32; i++ {
 		val, _ := getRegister(uint8(i))
 		fmt.Printf("$%02d %08x; ", i, val)
-		if (i+1)%4 == 0{
-			println();
+		if (i+1)%4 == 0 {
+			println()
 		}
 	}
 }

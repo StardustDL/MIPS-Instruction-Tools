@@ -99,6 +99,10 @@ func assertRI(args []Token) bool {
 	return len(args) == 2 && args[0].class == TC_REG && args[1].class == TC_IMM
 }
 
+func assertRR(args []Token) bool {
+	return len(args) == 2 && args[0].class == TC_REG && args[1].class == TC_REG
+}
+
 func assertI(args []Token) bool {
 	return len(args) == 1 && args[0].class == TC_IMM
 }
@@ -356,62 +360,64 @@ func TextParse(syntax InstructionSyntax, resolver SymbolResolver, nextPC uint32)
 			break
 		}
 		return instruction.Jr(uint8(args[0].value)), true
+	case "jalr":
+		if assertRR(args) {
+			return instruction.Jalr(uint8(args[0].value), uint8(args[1].value)), true
+		} else if assertR(args) {
+			return instruction.Jalr(instruction.GPR_RA, uint8(args[0].value)), true
+		}
 	case "lui":
 		if !assertRI(args) {
 			break
 		}
 		return instruction.Lui(uint8(args[0].value), uint16(args[1].value)), true
 	case "lb":
-		switch len(args) {
-		case 3:
-			if !assertRRI(args) {
-				break
-			}
+		if assertRRI(args) {
 			return instruction.Lb(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
-		case 2:
-			if !assertRI(args) {
-				break
-			}
+		} else if assertRI(args) {
 			return instruction.Lb(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
 		}
+	case "lbu":
+		if assertRRI(args) {
+			return instruction.Lbu(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		} else if assertRI(args) {
+			return instruction.Lbu(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
+		}
+	case "lh":
+		if assertRRI(args) {
+			return instruction.Lh(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		} else if assertRI(args) {
+			return instruction.Lh(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
+		}
+	case "lhu":
+		if assertRRI(args) {
+			return instruction.Lhu(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		} else if assertRI(args) {
+			return instruction.Lhu(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
+		}
 	case "sb":
-		switch len(args) {
-		case 3:
-			if !assertRRI(args) {
-				break
-			}
+		if assertRRI(args) {
 			return instruction.Sb(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
-		case 2:
-			if !assertRI(args) {
-				break
-			}
+		} else if assertRI(args) {
 			return instruction.Sb(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
 		}
 	case "lw":
-		switch len(args) {
-		case 3:
-			if !assertRRI(args) {
-				break
-			}
+		if assertRRI(args) {
 			return instruction.Lw(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
-		case 2:
-			if !assertRI(args) {
-				break
-			}
+		} else if assertRI(args) {
 			return instruction.Lw(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
 		}
 	case "sw":
-		switch len(args) {
-		case 3:
-			if !assertRRI(args) {
-				break
-			}
+		if assertRRI(args) {
 			return instruction.Sw(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
-		case 2:
-			if !assertRI(args) {
-				break
-			}
+		} else if assertRI(args) {
 			return instruction.Sw(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
+		}
+	case "sh":
+		if assertRRI(args) {
+			return instruction.Sh(uint8(args[0].value), uint8(args[1].value), uint16(args[2].value)), true
+		} else if assertRI(args) {
+			return instruction.Sh(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
 		}
 	case "nop":
 		if len(args) > 0 {

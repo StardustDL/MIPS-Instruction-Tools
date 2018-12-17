@@ -45,17 +45,33 @@ make run
 - beq
 - bne
 - bgez
-- bgezal
-- bgtz
 - blez
+- bgtz
 - bltz
+- bgezal
 - bltzal
 - j
 - jal
 - jr
+- jalr
 - lui
 - lb
+- lbu
+- lh
+- lhu
 - sb
 - lw
 - sw
+- sh
 - nop
+
+## To append
+
+- mult
+- multu
+- div
+- divu
+- mfhi
+- mflo
+- mul
+- break

@@ -29,6 +29,7 @@ const (
 	FT_SRLV    = 0x06
 	FT_SRAV    = 0x07
 	FT_JR      = 0x08
+	FT_JALR    = 0x09
 	FT_SYSCALL = 0x0c
 )
 
@@ -41,6 +42,8 @@ func (this RInstruction) ToASM() string {
 		return fmt.Sprintf("%-7s", this.Token)
 	} else if this.Token == "jr" {
 		return fmt.Sprintf("%-7s $%d", this.Token, this.Rs)
+	} else if this.Token == "jalr" {
+		return fmt.Sprintf("%-7s $%d, $%d", this.Token, this.Rd, this.Rs)
 	}
 	return fmt.Sprintf("%-7s $%d, $%d, $%d", this.Token, this.Rd, this.Rs, this.Rt)
 }
@@ -93,6 +96,8 @@ func ParseR(bits uint32) RInstruction {
 		result.Token = "srav"
 	case FT_JR:
 		result.Token = "jr"
+	case FT_JALR:
+		result.Token = "jalr"
 	case FT_SYSCALL:
 		result.Token = "syscall"
 	}
@@ -165,6 +170,10 @@ func Srav(rd uint8, rt uint8, rs uint8) RInstruction {
 
 func Jr(rs uint8) RInstruction {
 	return CreateR("jr", rs, 0x0, 0x0, 0x0, FT_JR)
+}
+
+func Jalr(rd uint8, rs uint8) RInstruction {
+	return CreateR("jalr", rs, 0x0, rd, 0x0, FT_JALR)
 }
 
 func Nop() RInstruction {
