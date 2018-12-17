@@ -1,118 +1,92 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"os"
 	"strconv"
-	"strings"
 
 	ass "./assembler"
 	emu "./emulator"
 	ins "./instruction"
 )
 
-func createTestInstructions() []ins.Instruction {
-	instrs := make([]ins.Instruction, 0, 1024)
-	instrs = append(instrs, ins.Lw(2, 0, 0x0))
-	instrs = append(instrs, ins.Lw(3, 0, 0x1))
-	instrs = append(instrs, ins.Add(1, 2, 3))
-	return instrs
-}
-
-func testToAndParse(instrs []ins.Instruction) {
-	for _, instr := range instrs {
-		to := instr.ToBits()
-		parsed := ins.Parse(to)
-		if parsed.GetToken() != instr.GetToken() {
-			fmt.Println("Error", parsed.GetToken(), instr.GetToken(), instr.ToASM())
-		}
-	}
-}
-
-func outputASMs(instrs []ins.Instruction) {
-	for _, instr := range instrs {
-		fmt.Println(instr.ToASM())
-	}
-}
-
-func outputBits(instrs []ins.Instruction) {
-	for _, bits := range ins.ToBin(instrs) {
-		fmt.Printf("%08s\n", strconv.FormatUint(uint64(bits), 16))
-	}
-}
-
-const (
-	PORT_INPUT  = 0x0000
-	PORT_OUTPUT = 0x0080
-	PORT_LED    = 0x0100
-	PORT_DIGIT  = 0x0101
-	SEG_TEXT    = 0x1000
-	ENTRY       = 0x1000
-)
-
-var memory [emu.MEMORY_SIZE]uint8
-
-func readAllLines(path string) []string {
-	file, err := os.OpenFile(path, os.O_RDWR, 0666)
-	if err != nil {
-		fmt.Println("Open file error!", err)
-		return make([]string, 0)
-	}
-	defer file.Close()
-
-	_, err = file.Stat()
-	if err != nil {
-		panic(err)
-	}
-
-	buf := bufio.NewReader(file)
-
-	result := make([]string, 0)
-
-	for {
-		line, err := buf.ReadString('\n')
-		line = strings.TrimSpace(line)
-		result = append(result, line)
-		if err != nil {
-			if err == io.EOF {
-				fmt.Println("File read ok!")
-				break
-			} else {
-				fmt.Println("Read file error!", err)
-				break
-			}
-		}
+func toASMs(instrs []ins.Instruction) []string {
+	result := make([]string, len(instrs))
+	for i, instr := range instrs {
+		result[i] = instr.ToASM()
 	}
 	return result
 }
 
+func toBitStrings(bin []uint32) []string {
+	result := make([]string, len(bin))
+	for i, bits := range bin {
+		result[i] = fmt.Sprintf("%08s", strconv.FormatUint(uint64(bits), 16))
+	}
+	return result
+}
+
+const OUT_ASM = "./test/output.asm"
+const OUT_BINS = "./test/output.txt"
+const OUT_BIN = "./test/output.bin"
+
 func testAssemble() {
-	content := readAllLines("./test.S")
-	ENTRY := uint32(0x00001000)
-	// instrs, _, ok := ass.Assemble(content, ass.AssembleConfig{Data: 0x10010000, Text: 0x00400000, EndInstruction: emu.END_INSTR}, -1)
-	instrs, bin, ok := ass.Assemble(content, ass.AssembleConfig{Data: 0x00001800, Text: ENTRY}, 0x2000)
-	if !ok {
-		fmt.Println("Assembling failed.")
+	content, err := readAllLines("./test/input.asm")
+	if err != nil {
+		println("File reading error", err)
 		return
 	}
-	fmt.Println("Asm:")
-	outputASMs(instrs)
-	fmt.Println()
-	// fmt.Println("Bit:")
-	// outputBits(instrs)
-	fmt.Println()
-	fmt.Println("Emulate")
-	fmt.Println("Initializing")
-	if !emu.Initialize(bin) {
-		fmt.Println("Initializing failed")
+
+	print("Assembling...")
+
+	ENTRY := uint32(0x00400000)
+	instrs, bin, ok := ass.Assemble(content, ass.AssembleConfig{Data: 0x10010000, Text: ENTRY}, -1)
+	// ENTRY := uint32(0x00001000)
+	// instrs, bin, ok := ass.Assemble(content, ass.AssembleConfig{Data: 0x00001800, Text: ENTRY}, 0x2000)
+	if ok {
+		println("done")
 	} else {
-		fmt.Println("Executing")
-		fmt.Println("Executed:", emu.Execute(ENTRY))
-		fmt.Println("Registers")
-		emu.ShowRegisters()
+		println("failed")
+		return
 	}
+
+	err = writeAllLines(OUT_BINS, toBitStrings(ins.ToBin(instrs)))
+	if err != nil {
+		println("Generate bit string file failed", err)
+		return
+	}
+	println("Bit string file:", OUT_BINS)
+
+	err = writeAllLines(OUT_ASM, toASMs(instrs))
+	if err != nil {
+		println("Generate asm file failed", err)
+		return
+	}
+	println("ASM file:", OUT_ASM)
+
+	err = writeAllBytes(OUT_BIN, bin)
+	if err != nil {
+		println("Generate asm file failed", err)
+		return
+	}
+	println("Bin file:", OUT_BIN)
+
+	if len(bin) == 0{
+		println("No bin data. Stop emulating.")
+		return
+	}
+
+	print("Initializing for emulating...")
+	if !emu.Initialize(bin) {
+		println("failed")
+		return
+	}
+	println("done")
+
+	println("Executing...")
+	flg := emu.Execute(ENTRY, false)
+	println("Executed", flg)
+	fmt.Println("Registers")
+	emu.ShowRegisters()
 }
 
 func main() {

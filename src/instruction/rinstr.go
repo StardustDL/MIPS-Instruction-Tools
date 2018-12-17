@@ -29,7 +29,7 @@ const (
 	FT_SRLV    = 0x06
 	FT_SRAV    = 0x07
 	FT_JR      = 0x08
-	FT_SYSCALL = 0x0a
+	FT_SYSCALL = 0x0c
 )
 
 func (this RInstruction) GetToken() string {

@@ -6,6 +6,8 @@ import (
 	"../instruction"
 )
 
+var isDebug bool
+
 func signext(ori uint16) uint32 {
 	result := uint32(ori)
 	result <<= 16
@@ -409,8 +411,10 @@ func executeJ(instr instruction.JInstruction) bool {
 	return false
 }
 
-func execute(instr instruction.Instruction) bool {
-	fmt.Printf("%x: %08x %s\n", pc, instr.ToBits(), instr.ToASM())
+func executeOne(instr instruction.Instruction) bool {
+	if isDebug {
+		fmt.Printf("0x%x: %08x %s\n", pc, instr.ToBits(), instr.ToASM())
+	}
 	switch instr.(type) {
 	case instruction.RInstruction:
 		return executeR(instr.(instruction.RInstruction))
@@ -422,11 +426,12 @@ func execute(instr instruction.Instruction) bool {
 	return false
 }
 
-func Execute(entry uint32) bool {
+func Execute(entry uint32,isdebug bool) bool {
 	if state != MEMU_INITIALIZED {
 		fmt.Println("Not initialized")
 		return false
 	}
+	isDebug = isdebug
 	state = MEMU_RUNNING
 	pc = entry
 	npc = pc + 4
@@ -436,7 +441,7 @@ func Execute(entry uint32) bool {
 			return false
 		}
 		instr := instruction.Parse(bits)
-		if !execute(instr) {
+		if !executeOne(instr) {
 			return false
 		}
 		if state != MEMU_RUNNING {
@@ -469,6 +474,9 @@ func Initialize(bin []uint8) bool {
 func ShowRegisters() {
 	for i := 0; i < 32; i++ {
 		val, _ := getRegister(uint8(i))
-		fmt.Printf("$%d %x\n", i, val)
+		fmt.Printf("$%02d %08x; ", i, val)
+		if (i+1)%4 == 0{
+			println();
+		}
 	}
 }

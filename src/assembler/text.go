@@ -149,14 +149,31 @@ func textPreprocessOne(syntax InstructionSyntax) ([]InstructionSyntax, bool) {
 		if !assertRI(syntax.args) {
 			break
 		}
-		return []InstructionSyntax{
-			InstructionSyntax{"lui", []Token{
-				Token{class: TC_REG, value: uint32(instruction.GPR_AT)},
-				Token{class: TC_IMM, value: syntax.args[1].value >> 16}}},
-			InstructionSyntax{"ori", []Token{
-				Token{class: TC_REG, value: uint32(syntax.args[0].value)},
-				Token{class: TC_REG, value: uint32(instruction.GPR_AT)},
-				Token{class: TC_IMM, value: syntax.args[1].value & 0xffff}}}}, true
+		imm := syntax.args[1].value
+		if imm <= 0xffff { // dont have high 16 bit
+			if (imm & 0x8000) > 0 { // sign bit is 1
+				return []InstructionSyntax{
+					InstructionSyntax{"ori", []Token{
+						Token{class: TC_REG, value: uint32(syntax.args[0].value)},
+						Token{class: TC_REG, value: uint32(instruction.GPR_AT)},
+						Token{class: TC_IMM, value: imm}}}}, true
+			} else {
+				return []InstructionSyntax{
+					InstructionSyntax{"addiu", []Token{
+						Token{class: TC_REG, value: uint32(syntax.args[0].value)},
+						Token{class: TC_REG, value: uint32(instruction.GPR_ZERO)},
+						Token{class: TC_IMM, value: imm}}}}, true
+			}
+		} else {
+			return []InstructionSyntax{
+				InstructionSyntax{"lui", []Token{
+					Token{class: TC_REG, value: uint32(instruction.GPR_AT)},
+					Token{class: TC_IMM, value: imm >> 16}}},
+				InstructionSyntax{"ori", []Token{
+					Token{class: TC_REG, value: uint32(syntax.args[0].value)},
+					Token{class: TC_REG, value: uint32(instruction.GPR_AT)},
+					Token{class: TC_IMM, value: imm & 0xffff}}}}, true
+		}
 	case "":
 		break
 	default:
@@ -408,4 +425,69 @@ func TextParse(syntax InstructionSyntax, resolver SymbolResolver, nextPC uint32)
 		return instruction.Syscall(), true
 	}
 	return instruction.Nop(), false
+}
+
+func buildText(content []string, config AssembleConfig, symbolTable map[string]uint32) ([]instruction.Instruction, bool) {
+	result := make([]instruction.Instruction, 0)
+	flg := true
+
+	symbolResWithoutError := func(args []Token) []Token {
+		for i, item := range args {
+			if item.class == TC_SYMBOL {
+				val, ok := symbolTable[item.symbol]
+				if ok {
+					args[i] = Token{TC_IMM, val, item.symbol}
+				} else {
+
+				}
+			}
+		}
+		return args
+	}
+
+	syntaxs, textSymbols, ok := TextPreprocess(content, symbolResWithoutError, config)
+
+	if ok {
+		for k, v := range textSymbols {
+			_, exists := symbolTable[k]
+			if exists {
+				flg = false
+				fmt.Printf("Symbol %s has been defined.\n", k)
+				break
+			}
+			symbolTable[k] = v
+		}
+	} else {
+		fmt.Printf("Text prepocessing failed.\n")
+		flg = false
+	}
+
+	if flg {
+		symbolRes := func(args []Token) []Token {
+			for i, item := range args {
+				if item.class == TC_SYMBOL {
+					val, ok := symbolTable[item.symbol]
+					if ok {
+						args[i] = Token{TC_IMM, val, item.symbol}
+					} else {
+						fmt.Printf("No this symbol: %s\n", item.symbol)
+					}
+				}
+			}
+			return args
+		}
+
+		currentAddr := uint32(config.Text)
+		for _, syn := range syntaxs {
+			res, ok := TextParse(syn, symbolRes, currentAddr+4)
+			if !ok {
+				flg = false
+				fmt.Printf("Parse failed: %s\n", syn.symbol)
+				break
+			}
+			result = append(result, res)
+			currentAddr += 4
+		}
+	}
+	return result, flg
 }
