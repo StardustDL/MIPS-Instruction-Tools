@@ -3,245 +3,245 @@ package instruction
 import "fmt"
 
 type RInstruction struct {
-	Token string
-	Rs    uint8
-	Rt    uint8
-	Rd    uint8
-	Shamt uint8
-	Funct uint8
+    Token string
+    Rs    uint8
+    Rt    uint8
+    Rd    uint8
+    Shamt uint8
+    Funct uint8
 }
 
 const (
-	FT_MULT    = 0x18
-	FT_MULTU   = 0x19
-	FT_DIV     = 0x1a
-	FT_DIVU    = 0x1b
-	FT_MFHI    = 0x10
-	FT_MTHI    = 0x11
-	FT_MFLO    = 0x12
-	FT_MTLO    = 0x13
-	FT_ADD     = 0x20
-	FT_ADDU    = 0x21
-	FT_SUB     = 0x22
-	FT_SUBU    = 0x23
-	FT_AND     = 0x24
-	FT_OR      = 0x25
-	FT_XOR     = 0x26
-	FT_NOR     = 0x27
-	FT_SLT     = 0x2a
-	FT_SLTU    = 0x2b
-	FT_SLL     = 0x00
-	FT_SRL     = 0x02
-	FT_SRA     = 0x03
-	FT_SLLV    = 0x04
-	FT_SRLV    = 0x06
-	FT_SRAV    = 0x07
-	FT_JR      = 0x08
-	FT_JALR    = 0x09
-	FT_SYSCALL = 0x0c
-	FT_BREAK   = 0x0d
+    FT_MULT    = 0x18
+    FT_MULTU   = 0x19
+    FT_DIV     = 0x1a
+    FT_DIVU    = 0x1b
+    FT_MFHI    = 0x10
+    FT_MTHI    = 0x11
+    FT_MFLO    = 0x12
+    FT_MTLO    = 0x13
+    FT_ADD     = 0x20
+    FT_ADDU    = 0x21
+    FT_SUB     = 0x22
+    FT_SUBU    = 0x23
+    FT_AND     = 0x24
+    FT_OR      = 0x25
+    FT_XOR     = 0x26
+    FT_NOR     = 0x27
+    FT_SLT     = 0x2a
+    FT_SLTU    = 0x2b
+    FT_SLL     = 0x00
+    FT_SRL     = 0x02
+    FT_SRA     = 0x03
+    FT_SLLV    = 0x04
+    FT_SRLV    = 0x06
+    FT_SRAV    = 0x07
+    FT_JR      = 0x08
+    FT_JALR    = 0x09
+    FT_SYSCALL = 0x0c
+    FT_BREAK   = 0x0d
 )
 
 func (this RInstruction) GetToken() string {
-	return this.Token
+    return this.Token
 }
 
 func (this RInstruction) ToASM() string {
-	if this.Funct == FT_SYSCALL {
-		return fmt.Sprintf("%-7s", this.Token)
-	} else if this.Funct == FT_BREAK {
-		code := uint32(this.Rs)<<15 | uint32(this.Rt)<<10 | uint32(this.Rd)<<5 | uint32(this.Shamt)
-		return fmt.Sprintf("%-7s %d", this.Token, code)
-	} else if this.Funct == FT_JR {
-		return fmt.Sprintf("%-7s $%d", this.Token, this.Rs)
-	} else if this.Funct == FT_JALR {
-		return fmt.Sprintf("%-7s $%d, $%d", this.Token, this.Rd, this.Rs)
-	} else if this.Funct == FT_MULT || this.Funct == FT_MULTU || this.Funct == FT_DIV || this.Funct == FT_DIVU {
-		return fmt.Sprintf("%-7s $%d, $%d", this.Token, this.Rs, this.Rt)
-	}
-	return fmt.Sprintf("%-7s $%d, $%d, $%d", this.Token, this.Rd, this.Rs, this.Rt)
+    if this.Funct == FT_SYSCALL {
+        return fmt.Sprintf("%-7s", this.Token)
+    } else if this.Funct == FT_BREAK {
+        code := uint32(this.Rs)<<15 | uint32(this.Rt)<<10 | uint32(this.Rd)<<5 | uint32(this.Shamt)
+        return fmt.Sprintf("%-7s %d", this.Token, code)
+    } else if this.Funct == FT_JR {
+        return fmt.Sprintf("%-7s $%d", this.Token, this.Rs)
+    } else if this.Funct == FT_JALR {
+        return fmt.Sprintf("%-7s $%d, $%d", this.Token, this.Rd, this.Rs)
+    } else if this.Funct == FT_MULT || this.Funct == FT_MULTU || this.Funct == FT_DIV || this.Funct == FT_DIVU {
+        return fmt.Sprintf("%-7s $%d, $%d", this.Token, this.Rs, this.Rt)
+    }
+    return fmt.Sprintf("%-7s $%d, $%d, $%d", this.Token, this.Rd, this.Rs, this.Rt)
 }
 
 func (this RInstruction) ToBits() uint32 {
-	return (uint32(0x0) & MASK_OPCODE << SHIFT_OPCODE) | (uint32(this.Rs) & MASK_REG << SHIFT_RS) | (uint32(this.Rt) & MASK_REG << SHIFT_RT) | (uint32(this.Rd) & MASK_REG << SHIFT_RD) | (uint32(this.Shamt) & MASK_SHAMT << SHIFT_SHAMT) | (uint32(this.Funct) & MASK_FUNCT << SHIFT_FUNCT)
+    return (uint32(0x0) & MASK_OPCODE << SHIFT_OPCODE) | (uint32(this.Rs) & MASK_REG << SHIFT_RS) | (uint32(this.Rt) & MASK_REG << SHIFT_RT) | (uint32(this.Rd) & MASK_REG << SHIFT_RD) | (uint32(this.Shamt) & MASK_SHAMT << SHIFT_SHAMT) | (uint32(this.Funct) & MASK_FUNCT << SHIFT_FUNCT)
 }
 
 func CreateR(token string, rs uint8, rt uint8, rd uint8, shamt uint8, funct uint8) RInstruction {
-	return RInstruction{token, rs & MASK_REG, rt & MASK_REG, rd & MASK_REG, shamt & MASK_SHAMT, funct & MASK_FUNCT}
+    return RInstruction{token, rs & MASK_REG, rt & MASK_REG, rd & MASK_REG, shamt & MASK_SHAMT, funct & MASK_FUNCT}
 }
 
 func ParseR(bits uint32) RInstruction {
-	result := CreateR("", uint8(bits>>SHIFT_RS), uint8(bits>>SHIFT_RT), uint8(bits>>SHIFT_RD), uint8(bits>>SHIFT_SHAMT), uint8(bits>>SHIFT_FUNCT))
-	switch result.Funct {
-	case FT_ADD:
-		result.Token = "add"
-	case FT_ADDU:
-		result.Token = "addu"
-	case FT_SUB:
-		result.Token = "sub"
-	case FT_SUBU:
-		result.Token = "subu"
-	case FT_AND:
-		result.Token = "and"
-	case FT_OR:
-		result.Token = "or"
-	case FT_XOR:
-		result.Token = "xor"
-	case FT_NOR:
-		result.Token = "nor"
-	case FT_SLT:
-		result.Token = "slt"
-	case FT_MFHI:
-		result.Token = "mfhi"
-	case FT_MTHI:
-		result.Token = "mthi"
-	case FT_MFLO:
-		result.Token = "mflo"
-	case FT_MTLO:
-		result.Token = "mtlo"
-	case FT_SLTU:
-		result.Token = "sltu"
-	case FT_SLL:
-		result.Token = "sll"
-	case FT_SRL:
-		result.Token = "srl"
-	case FT_SRA:
-		result.Token = "sra"
-	case FT_SLLV:
-		result.Token = "sllv"
-	case FT_SRLV:
-		result.Token = "srlv"
-	case FT_SRAV:
-		result.Token = "srav"
-	case FT_JR:
-		result.Token = "jr"
-	case FT_JALR:
-		result.Token = "jalr"
-	case FT_SYSCALL:
-		result.Token = "syscall"
-	case FT_BREAK:
-		result.Token = "break"
-	case FT_MULT:
-		result.Token = "mult"
-	case FT_MULTU:
-		result.Token = "multu"
-	case FT_DIV:
-		result.Token = "div"
-	case FT_DIVU:
-		result.Token = "divu"
-	}
-	return result
+    result := CreateR("", uint8(bits>>SHIFT_RS), uint8(bits>>SHIFT_RT), uint8(bits>>SHIFT_RD), uint8(bits>>SHIFT_SHAMT), uint8(bits>>SHIFT_FUNCT))
+    switch result.Funct {
+    case FT_ADD:
+        result.Token = "add"
+    case FT_ADDU:
+        result.Token = "addu"
+    case FT_SUB:
+        result.Token = "sub"
+    case FT_SUBU:
+        result.Token = "subu"
+    case FT_AND:
+        result.Token = "and"
+    case FT_OR:
+        result.Token = "or"
+    case FT_XOR:
+        result.Token = "xor"
+    case FT_NOR:
+        result.Token = "nor"
+    case FT_SLT:
+        result.Token = "slt"
+    case FT_MFHI:
+        result.Token = "mfhi"
+    case FT_MTHI:
+        result.Token = "mthi"
+    case FT_MFLO:
+        result.Token = "mflo"
+    case FT_MTLO:
+        result.Token = "mtlo"
+    case FT_SLTU:
+        result.Token = "sltu"
+    case FT_SLL:
+        result.Token = "sll"
+    case FT_SRL:
+        result.Token = "srl"
+    case FT_SRA:
+        result.Token = "sra"
+    case FT_SLLV:
+        result.Token = "sllv"
+    case FT_SRLV:
+        result.Token = "srlv"
+    case FT_SRAV:
+        result.Token = "srav"
+    case FT_JR:
+        result.Token = "jr"
+    case FT_JALR:
+        result.Token = "jalr"
+    case FT_SYSCALL:
+        result.Token = "syscall"
+    case FT_BREAK:
+        result.Token = "break"
+    case FT_MULT:
+        result.Token = "mult"
+    case FT_MULTU:
+        result.Token = "multu"
+    case FT_DIV:
+        result.Token = "div"
+    case FT_DIVU:
+        result.Token = "divu"
+    }
+    return result
 }
 
 func Add(rd uint8, rs uint8, rt uint8) RInstruction {
-	return CreateR("add", rs, rt, rd, 0x0, FT_ADD)
+    return CreateR("add", rs, rt, rd, 0x0, FT_ADD)
 }
 
 func Addu(rd uint8, rs uint8, rt uint8) RInstruction {
-	return CreateR("addu", rs, rt, rd, 0x0, FT_ADDU)
+    return CreateR("addu", rs, rt, rd, 0x0, FT_ADDU)
 }
 
 func Sub(rd uint8, rs uint8, rt uint8) RInstruction {
-	return CreateR("sub", rs, rt, rd, 0x0, FT_SUB)
+    return CreateR("sub", rs, rt, rd, 0x0, FT_SUB)
 }
 
 func Subu(rd uint8, rs uint8, rt uint8) RInstruction {
-	return CreateR("subu", rs, rt, rd, 0x0, FT_SUBU)
+    return CreateR("subu", rs, rt, rd, 0x0, FT_SUBU)
 }
 
 func And(rd uint8, rs uint8, rt uint8) RInstruction {
-	return CreateR("and", rs, rt, rd, 0x0, FT_AND)
+    return CreateR("and", rs, rt, rd, 0x0, FT_AND)
 }
 
 func Or(rd uint8, rs uint8, rt uint8) RInstruction {
-	return CreateR("or", rs, rt, rd, 0x0, FT_OR)
+    return CreateR("or", rs, rt, rd, 0x0, FT_OR)
 }
 
 func Xor(rd uint8, rs uint8, rt uint8) RInstruction {
-	return CreateR("xor", rs, rt, rd, 0x0, FT_XOR)
+    return CreateR("xor", rs, rt, rd, 0x0, FT_XOR)
 }
 
 func Nor(rd uint8, rs uint8, rt uint8) RInstruction {
-	return CreateR("nor", rs, rt, rd, 0x0, FT_NOR)
+    return CreateR("nor", rs, rt, rd, 0x0, FT_NOR)
 }
 
 func Slt(rd uint8, rs uint8, rt uint8) RInstruction {
-	return CreateR("slt", rs, rt, rd, 0x0, FT_SLT)
+    return CreateR("slt", rs, rt, rd, 0x0, FT_SLT)
 }
 
 func Sltu(rd uint8, rs uint8, rt uint8) RInstruction {
-	return CreateR("sltu", rs, rt, rd, 0x0, FT_SLTU)
+    return CreateR("sltu", rs, rt, rd, 0x0, FT_SLTU)
 }
 
 func Sll(rd uint8, rt uint8, shamt uint8) RInstruction {
-	return CreateR("sll", 0x00, rt, rd, shamt, FT_SLL)
+    return CreateR("sll", 0x00, rt, rd, shamt, FT_SLL)
 }
 
 func Srl(rd uint8, rt uint8, shamt uint8) RInstruction {
-	return CreateR("srl", 0x00, rt, rd, shamt, FT_SRL)
+    return CreateR("srl", 0x00, rt, rd, shamt, FT_SRL)
 }
 
 func Sra(rd uint8, rt uint8, shamt uint8) RInstruction {
-	return CreateR("sra", 0x00, rt, rd, shamt, FT_SRA)
+    return CreateR("sra", 0x00, rt, rd, shamt, FT_SRA)
 }
 
 func Sllv(rd uint8, rt uint8, rs uint8) RInstruction {
-	return CreateR("sllv", rs, rt, rd, 0x0, FT_SLLV)
+    return CreateR("sllv", rs, rt, rd, 0x0, FT_SLLV)
 }
 
 func Srlv(rd uint8, rt uint8, rs uint8) RInstruction {
-	return CreateR("srlv", rs, rt, rd, 0x0, FT_SRLV)
+    return CreateR("srlv", rs, rt, rd, 0x0, FT_SRLV)
 }
 
 func Srav(rd uint8, rt uint8, rs uint8) RInstruction {
-	return CreateR("srav", rs, rt, rd, 0x0, FT_SRAV)
+    return CreateR("srav", rs, rt, rd, 0x0, FT_SRAV)
 }
 
 func Jr(rs uint8) RInstruction {
-	return CreateR("jr", rs, 0x0, 0x0, 0x0, FT_JR)
+    return CreateR("jr", rs, 0x0, 0x0, 0x0, FT_JR)
 }
 
 func Jalr(rd uint8, rs uint8) RInstruction {
-	return CreateR("jalr", rs, 0x0, rd, 0x0, FT_JALR)
+    return CreateR("jalr", rs, 0x0, rd, 0x0, FT_JALR)
 }
 
 func Syscall() RInstruction {
-	return CreateR("syscall", 0x0, 0x0, 0x0, 0x0, FT_SYSCALL)
+    return CreateR("syscall", 0x0, 0x0, 0x0, 0x0, FT_SYSCALL)
 }
 
 func Break(code uint32) RInstruction {
-	code &= 0xfffff
-	return CreateR("break", uint8(code>>15), uint8(code>>10), uint8(code>>5), uint8(code), FT_BREAK)
+    code &= 0xfffff
+    return CreateR("break", uint8(code>>15), uint8(code>>10), uint8(code>>5), uint8(code), FT_BREAK)
 }
 
 func Mult(rs uint8, rt uint8) RInstruction {
-	return CreateR("mult", rs, rt, 0x0, 0x0, FT_MULT)
+    return CreateR("mult", rs, rt, 0x0, 0x0, FT_MULT)
 }
 
 func Multu(rs uint8, rt uint8) RInstruction {
-	return CreateR("multu", rs, rt, 0x0, 0x0, FT_MULTU)
+    return CreateR("multu", rs, rt, 0x0, 0x0, FT_MULTU)
 }
 
 func Div(rs uint8, rt uint8) RInstruction {
-	return CreateR("div", rs, rt, 0x0, 0x0, FT_DIV)
+    return CreateR("div", rs, rt, 0x0, 0x0, FT_DIV)
 }
 
 func Divu(rs uint8, rt uint8) RInstruction {
-	return CreateR("divu", rs, rt, 0x0, 0x0, FT_DIVU)
+    return CreateR("divu", rs, rt, 0x0, 0x0, FT_DIVU)
 }
 
 func Mfhi(rd uint8) RInstruction {
-	return CreateR("mfhi", 0x0, 0x0, rd, 0x0, FT_MFHI)
+    return CreateR("mfhi", 0x0, 0x0, rd, 0x0, FT_MFHI)
 }
 
 func Mthi(rs uint8) RInstruction {
-	return CreateR("mthi", rs, 0x0, 0x0, 0x0, FT_MFHI)
+    return CreateR("mthi", rs, 0x0, 0x0, 0x0, FT_MFHI)
 }
 
 func Mflo(rd uint8) RInstruction {
-	return CreateR("mflo", 0x0, 0x0, rd, 0x0, FT_MFLO)
+    return CreateR("mflo", 0x0, 0x0, rd, 0x0, FT_MFLO)
 }
 
 func Mtlo(rs uint8) RInstruction {
-	return CreateR("mtlo", rs, 0x0, 0x0, 0x0, FT_MFLO)
+    return CreateR("mtlo", rs, 0x0, 0x0, 0x0, FT_MFLO)
 }
