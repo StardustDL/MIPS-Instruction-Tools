@@ -74,5 +74,9 @@ func Assemble(content []string, config AssembleConfig, size int32) ([]instructio
 		}
 	}
 
+	if len(segs[DEFAULT_SEGMENT]) > 0 {
+		println("Warning: some instruction not in any special segment")
+	}
+
 	return retinstrs, result, flg
 }

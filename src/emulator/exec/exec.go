@@ -102,6 +102,10 @@ func InitializeTable() {
 		"mflo":    ExecRFunc(mflo),
 		"mthi":    ExecRFunc(mthi),
 		"mtlo":    ExecRFunc(mtlo),
+		"slt":     ExecRFunc(slt),
+		"slti":    ExecIFunc(slti),
+		"sltu":    ExecRFunc(sltu),
+		"sltiu":   ExecIFunc(sltiu),
 		"sll":     ExecRFunc(sll),
 		"sllv":    ExecRFunc(sllv),
 		"sra":     ExecRFunc(sra),
@@ -135,8 +139,8 @@ func InitializeTable() {
 		"jal":     ExecJFunc(jal),
 		"jr":      ExecRFunc(jr),
 		"jalr":    ExecRFunc(jalr),
-		"nop":     ExecRFunc(nop),
 		"syscall": ExecRFunc(syscall),
+		"break":   ExecRFunc(_break),
 	}
 }
 

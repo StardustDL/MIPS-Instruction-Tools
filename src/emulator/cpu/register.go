@@ -35,6 +35,9 @@ func SetGPR(id uint8, val uint32) {
 	if !(0 <= id && id < 32) {
 		panic(fmt.Sprintf("Register set failed %d", id))
 	}
+	if id == 0 && val != 0{
+		panic(fmt.Sprintf("Try to set $zero to %d", val))
+	}
 	regs[id] = val
 }
 

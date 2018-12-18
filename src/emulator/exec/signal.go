@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"fmt"
 	"bufio"
 	"os"
 	"strconv"
@@ -84,4 +85,12 @@ func doSystemCall(id uint32) {
 			writeString(strpos, buflen, "")
 		}
 	}
+}
+
+func doBreak(code uint32){
+	if IsDebug{
+		
+	}
+
+	println(fmt.Sprintf("Recieve break code: %d",code))
 }

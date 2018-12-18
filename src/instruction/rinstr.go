@@ -12,7 +12,6 @@ type RInstruction struct {
 }
 
 const (
-	FT_NOP     = 0x00
 	FT_MULT    = 0x18
 	FT_MULTU   = 0x19
 	FT_DIV     = 0x1a
@@ -40,6 +39,7 @@ const (
 	FT_JR      = 0x08
 	FT_JALR    = 0x09
 	FT_SYSCALL = 0x0c
+	FT_BREAK   = 0x0d
 )
 
 func (this RInstruction) GetToken() string {
@@ -47,8 +47,11 @@ func (this RInstruction) GetToken() string {
 }
 
 func (this RInstruction) ToASM() string {
-	if this.Funct == FT_NOP || this.Funct == FT_SYSCALL {
+	if this.Funct == FT_SYSCALL {
 		return fmt.Sprintf("%-7s", this.Token)
+	} else if this.Funct == FT_BREAK {
+		code := uint32(this.Rs)<<15 | uint32(this.Rt)<<10 | uint32(this.Rd)<<5 | uint32(this.Shamt)
+		return fmt.Sprintf("%-7s %d", this.Token, code)
 	} else if this.Funct == FT_JR {
 		return fmt.Sprintf("%-7s $%d", this.Token, this.Rs)
 	} else if this.Funct == FT_JALR {
@@ -68,9 +71,6 @@ func CreateR(token string, rs uint8, rt uint8, rd uint8, shamt uint8, funct uint
 }
 
 func ParseR(bits uint32) RInstruction {
-	if bits == 0 {
-		return Nop()
-	}
 	result := CreateR("", uint8(bits>>SHIFT_RS), uint8(bits>>SHIFT_RT), uint8(bits>>SHIFT_RD), uint8(bits>>SHIFT_SHAMT), uint8(bits>>SHIFT_FUNCT))
 	switch result.Funct {
 	case FT_ADD:
@@ -119,6 +119,8 @@ func ParseR(bits uint32) RInstruction {
 		result.Token = "jalr"
 	case FT_SYSCALL:
 		result.Token = "syscall"
+	case FT_BREAK:
+		result.Token = "break"
 	case FT_MULT:
 		result.Token = "mult"
 	case FT_MULTU:
@@ -203,12 +205,13 @@ func Jalr(rd uint8, rs uint8) RInstruction {
 	return CreateR("jalr", rs, 0x0, rd, 0x0, FT_JALR)
 }
 
-func Nop() RInstruction {
-	return CreateR("nop", 0x0, 0x0, 0x0, 0x0, FT_NOP)
-}
-
 func Syscall() RInstruction {
 	return CreateR("syscall", 0x0, 0x0, 0x0, 0x0, FT_SYSCALL)
+}
+
+func Break(code uint32) RInstruction {
+	code &= 0xfffff
+	return CreateR("break", uint8(code>>15), uint8(code>>10), uint8(code>>5), uint8(code), FT_BREAK)
 }
 
 func Mult(rs uint8, rt uint8) RInstruction {

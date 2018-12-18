@@ -83,7 +83,7 @@ func testAssemble() {
 	println("done")
 
 	println("Executing...")
-	flg := emu.Execute(ENTRY, true)
+	flg := emu.Execute(ENTRY, false)
 	println("Executed", flg)
 	fmt.Println("Registers")
 	emu.ShowRegisters()

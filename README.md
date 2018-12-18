@@ -19,12 +19,25 @@ make run
 
 # Instructions
 
+See [here](https://www.mips.com/?do-download=mips32-instruction-set-quick-reference-v1-01) and [here](https://www.mips.com/products/architectures/mips32-3/)
+
+Count: 50
+
 - add
 - addu
 - addi
 - addiu
 - sub
 - subu
+- lui
+- mult
+- multu
+- div
+- divu
+- mfhi
+- mflo
+- mthi
+- mtlo
 - slt
 - sltu
 - slti
@@ -54,7 +67,6 @@ make run
 - jal
 - jr
 - jalr
-- lui
 - lb
 - lbu
 - lh
@@ -63,16 +75,24 @@ make run
 - lw
 - sw
 - sh
+- syscall
+- break
+
+## Assembler pseudo-instruction
+
+Count: 10
+
+- li
+- la
+- neg
+- negu
+- b
+- bal
+- beqz
+- bnez
 - nop
-- mfhi
-- mflo
-- mthi
-- mtlo
-- mult
-- multu
-- div
-- divu
+- move
 
 ## To append
 
-- break
+None

@@ -148,8 +148,11 @@ func TextPreprocess(content []string, resolver SymbolResolver, config AssembleCo
 }
 
 func textPreprocessOne(syntax InstructionSyntax) ([]InstructionSyntax, bool) {
+	tokenZERO := Token{class: TC_REG, value: uint32(instruction.GPR_ZERO)}
+	tokenAT := Token{class: TC_REG, value: uint32(instruction.GPR_AT)}
+
 	switch syntax.symbol {
-	case "li": // extra instr
+	case "li":
 		if !assertRI(syntax.args) {
 			break
 		}
@@ -159,25 +162,122 @@ func textPreprocessOne(syntax InstructionSyntax) ([]InstructionSyntax, bool) {
 				return []InstructionSyntax{
 					InstructionSyntax{"ori", []Token{
 						Token{class: TC_REG, value: uint32(syntax.args[0].value)},
-						Token{class: TC_REG, value: uint32(instruction.GPR_AT)},
+						tokenAT,
 						Token{class: TC_IMM, value: imm}}}}, true
 			} else {
 				return []InstructionSyntax{
 					InstructionSyntax{"addiu", []Token{
 						Token{class: TC_REG, value: uint32(syntax.args[0].value)},
-						Token{class: TC_REG, value: uint32(instruction.GPR_ZERO)},
+						tokenZERO,
 						Token{class: TC_IMM, value: imm}}}}, true
 			}
 		} else {
 			return []InstructionSyntax{
 				InstructionSyntax{"lui", []Token{
-					Token{class: TC_REG, value: uint32(instruction.GPR_AT)},
+					tokenAT,
 					Token{class: TC_IMM, value: imm >> 16}}},
 				InstructionSyntax{"ori", []Token{
 					Token{class: TC_REG, value: uint32(syntax.args[0].value)},
-					Token{class: TC_REG, value: uint32(instruction.GPR_AT)},
+					tokenAT,
 					Token{class: TC_IMM, value: imm & 0xffff}}}}, true
 		}
+	case "la":
+		if assertRRI(syntax.args) {
+			return []InstructionSyntax{
+				InstructionSyntax{"ori", []Token{
+					tokenAT,
+					tokenZERO,
+					syntax.args[2]}},
+				InstructionSyntax{"add", []Token{
+					syntax.args[0],
+					syntax.args[1],
+					tokenAT}}}, true
+		} else if assertRI(syntax.args) {
+			return []InstructionSyntax{
+				InstructionSyntax{"addi", []Token{
+					syntax.args[0],
+					syntax.args[1],
+					tokenZERO}}}, true
+		}
+	case "neg":
+		if !assertRR(syntax.args) {
+			break
+		}
+		return []InstructionSyntax{
+			InstructionSyntax{"sub", []Token{
+				syntax.args[0],
+				tokenZERO,
+				syntax.args[1]}}}, true
+	case "negu":
+		if !assertRR(syntax.args) {
+			break
+		}
+		return []InstructionSyntax{
+			InstructionSyntax{"subu", []Token{
+				syntax.args[0],
+				tokenZERO,
+				syntax.args[1]}}}, true
+	case "move":
+		if !assertRR(syntax.args) {
+			break
+		}
+		return []InstructionSyntax{
+			InstructionSyntax{"addu", []Token{
+				syntax.args[0],
+				tokenZERO,
+				syntax.args[1]}}}, true
+	case "bal":
+		if !assertI(syntax.args) {
+			break
+		}
+		return []InstructionSyntax{
+			InstructionSyntax{"bgezal", []Token{
+				tokenZERO,
+				syntax.args[0]}}}, true
+	case "b":
+		if !assertI(syntax.args) {
+			break
+		}
+		return []InstructionSyntax{
+			InstructionSyntax{"beq", []Token{
+				tokenZERO,
+				tokenZERO,
+				syntax.args[0]}}}, true
+	case "beqz":
+		if !assertRI(syntax.args) {
+			break
+		}
+		return []InstructionSyntax{
+			InstructionSyntax{"beq", []Token{
+				syntax.args[0],
+				tokenZERO,
+				syntax.args[1]}}}, true
+	case "bnez":
+		if !assertRI(syntax.args) {
+			break
+		}
+		return []InstructionSyntax{
+			InstructionSyntax{"bne", []Token{
+				syntax.args[0],
+				tokenZERO,
+				syntax.args[1]}}}, true
+	case "not":
+		if !assertRR(syntax.args) {
+			break
+		}
+		return []InstructionSyntax{
+			InstructionSyntax{"nor", []Token{
+				syntax.args[0],
+				syntax.args[1],
+				tokenZERO}}}, true
+	case "nop":
+		if !(len(syntax.args) == 0) {
+			break
+		}
+		return []InstructionSyntax{InstructionSyntax{"sll", []Token{
+			tokenZERO,
+			tokenZERO,
+			Token{class: TC_IMM, value: 0}}}}, true
 	case "":
 		break
 	default:
@@ -220,6 +320,46 @@ func TextParse(syntax InstructionSyntax, resolver SymbolResolver, nextPC uint32)
 			break
 		}
 		return instruction.Subu(uint8(args[0].value), uint8(args[1].value), uint8(args[2].value)), true
+	case "div":
+		if !assertRR(args) {
+			break
+		}
+		return instruction.Div(uint8(args[0].value), uint8(args[1].value)), true
+	case "divu":
+		if !assertRR(args) {
+			break
+		}
+		return instruction.Divu(uint8(args[0].value), uint8(args[1].value)), true
+	case "mult":
+		if !assertRR(args) {
+			break
+		}
+		return instruction.Mult(uint8(args[0].value), uint8(args[1].value)), true
+	case "multu":
+		if !assertRR(args) {
+			break
+		}
+		return instruction.Multu(uint8(args[0].value), uint8(args[1].value)), true
+	case "mfhi":
+		if !assertR(args) {
+			break
+		}
+		return instruction.Mfhi(uint8(args[0].value)), true
+	case "mthi":
+		if !assertR(args) {
+			break
+		}
+		return instruction.Mthi(uint8(args[0].value)), true
+	case "mflo":
+		if !assertR(args) {
+			break
+		}
+		return instruction.Mflo(uint8(args[0].value)), true
+	case "mtlo":
+		if !assertR(args) {
+			break
+		}
+		return instruction.Mtlo(uint8(args[0].value)), true
 	case "and":
 		if !assertRRR(args) {
 			break
@@ -419,18 +559,19 @@ func TextParse(syntax InstructionSyntax, resolver SymbolResolver, nextPC uint32)
 		} else if assertRI(args) {
 			return instruction.Sh(uint8(args[0].value), uint8(0), uint16(args[1].value)), true
 		}
-	case "nop":
-		if len(args) > 0 {
-			break
-		}
-		return instruction.Nop(), true
 	case "syscall":
 		if len(args) > 0 {
 			break
 		}
 		return instruction.Syscall(), true
+	case "break":
+		if len(args) == 0 {
+			return instruction.Break(0), true
+		} else if assertI(args){
+			return instruction.Break(args[0].value), true
+		}
 	}
-	return instruction.Nop(), false
+	return instruction.Parse(0), false
 }
 
 func buildText(content []string, config AssembleConfig, symbolTable map[string]uint32) ([]instruction.Instruction, bool) {
