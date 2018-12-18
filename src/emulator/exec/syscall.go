@@ -1,10 +1,13 @@
-package emulator
+package exec
 
 import (
 	"bufio"
 	"os"
 	"strconv"
-	instr "../instruction"
+
+	"../../instruction"
+	"../cpu"
+	"../memory"
 )
 
 const (
@@ -18,10 +21,10 @@ const (
 
 func readString(addr uint32) string {
 	bytes := make([]byte, 0)
-	chr, ok := memoryRead(addr, 1)
-	for addr++; ok && chr != 0; addr++ {
+	chr := memory.Read(addr, 1)
+	for addr++; chr != 0; addr++ {
 		bytes = append(bytes, byte(chr))
-		chr, ok = memoryRead(addr, 1)
+		chr = memory.Read(addr, 1)
 	}
 	return string(bytes)
 }
@@ -31,9 +34,9 @@ func writeString(addr uint32, bufsize uint32, str string) {
 		str = str[0 : bufsize-1]
 	}
 	for i, chr := range str {
-		memoryWrite(addr+uint32(i), 1, uint32(chr))
+		memory.Write(addr+uint32(i), 1, uint32(chr))
 	}
-	memoryWrite(addr+uint32(len(str)), 1, uint32(0))
+	memory.Write(addr+uint32(len(str)), 1, uint32(0))
 }
 
 var stdin *bufio.Scanner
@@ -41,16 +44,19 @@ var stdin *bufio.Scanner
 func doSystemCall(id uint32) {
 	switch id {
 	case SYS_EXIT:
-		state = MEMU_EXITED
+		if IsDebug{
+			println("Exited")
+		}
+		State = MEMU_EXITED
 	case SYS_PRINT_INT:
-		val, _ := getRegister(instr.GPR_A0)
+		val := cpu.GetGPR(instruction.GPR_A0)
 		print(val)
 	case SYS_PRINT_STRING:
-		strpos, _ := getRegister(instr.GPR_A0)
+		strpos := cpu.GetGPR(instruction.GPR_A0)
 		str := readString(strpos)
 		print(str)
 	case SYS_PRINT_CHAR:
-		val, _ := getRegister(instr.GPR_A0)
+		val := cpu.GetGPR(instruction.GPR_A0)
 		print(string(rune(val)))
 	case SYS_READ_INT:
 		if stdin == nil {
@@ -60,14 +66,14 @@ func doSystemCall(id uint32) {
 			str := stdin.Text()
 			val, err := strconv.ParseInt(str, 0, 32)
 			if err == nil {
-				setRegister(instr.GPR_V0, uint32(val))
+				cpu.SetGPR(instruction.GPR_V0, uint32(val))
 				break
 			}
 		}
-		setRegister(instr.GPR_V0, uint32(0))
+		cpu.SetGPR(instruction.GPR_V0, uint32(0))
 	case SYS_READ_STRING:
-		strpos, _ := getRegister(instr.GPR_A0)
-		buflen, _ := getRegister(instr.GPR_A1)
+		strpos := cpu.GetGPR(instruction.GPR_A0)
+		buflen := cpu.GetGPR(instruction.GPR_A1)
 		if stdin == nil {
 			stdin = bufio.NewScanner(os.Stdin)
 		}

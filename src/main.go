@@ -38,10 +38,10 @@ func testAssemble() {
 
 	print("Assembling...")
 
-	ENTRY := uint32(0x00400000)
-	instrs, bin, ok := ass.Assemble(content, ass.AssembleConfig{Data: 0x10010000, Text: ENTRY}, -1)
-	// ENTRY := uint32(0x00001000)
-	// instrs, bin, ok := ass.Assemble(content, ass.AssembleConfig{Data: 0x00001800, Text: ENTRY}, 0x2000)
+	// ENTRY := uint32(0x00400000)
+	// instrs, bin, ok := ass.Assemble(content, ass.AssembleConfig{Data: 0x10010000, Text: ENTRY}, -1)
+	ENTRY := uint32(0x00001000)
+	instrs, bin, ok := ass.Assemble(content, ass.AssembleConfig{Data: 0x00001800, Text: ENTRY}, 0x2000)
 	if ok {
 		println("done")
 	} else {
@@ -83,7 +83,7 @@ func testAssemble() {
 	println("done")
 
 	println("Executing...")
-	flg := emu.Execute(ENTRY, false)
+	flg := emu.Execute(ENTRY, true)
 	println("Executed", flg)
 	fmt.Println("Registers")
 	emu.ShowRegisters()

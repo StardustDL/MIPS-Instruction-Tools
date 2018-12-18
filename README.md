@@ -64,14 +64,15 @@ make run
 - sw
 - sh
 - nop
-
-## To append
-
+- mfhi
+- mflo
+- mthi
+- mtlo
 - mult
 - multu
 - div
 - divu
-- mfhi
-- mflo
-- mul
+
+## To append
+
 - break
