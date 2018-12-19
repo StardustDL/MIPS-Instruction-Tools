@@ -1,6 +1,7 @@
 package emulator
 
 import (
+	"errors"
 	"fmt"
 	"runtime/debug"
 
@@ -11,7 +12,6 @@ import (
 )
 
 func executeOne(instr instruction.Instruction) {
-
 	defer handleErrorWhileExecuting()
 
 	if exec.IsDebug {
@@ -20,36 +20,36 @@ func executeOne(instr instruction.Instruction) {
 	token := instr.GetToken()
 	exc, ok := exec.ExecTable[token]
 	if !ok {
-		panic(fmt.Sprintf("No this instruction %s", token))
+		panic(errors.New(fmt.Sprintf("No this instruction %s", token)))
 	}
 	switch exc.(type) {
 	case exec.ExecRFunc:
 		ri, ok := instr.(instruction.RInstruction)
 		if !ok {
-			panic(fmt.Sprintf("The instruction type isn't fitting exec type"))
+			panic(errors.New(fmt.Sprintf("The instruction type isn't fitting exec type")))
 		}
 		exc.(exec.ExecRFunc)(ri)
 	case exec.ExecIFunc:
 		ri, ok := instr.(instruction.IInstruction)
 		if !ok {
-			panic(fmt.Sprintf("The instruction type isn't fitting exec type"))
+			panic(errors.New(fmt.Sprintf("The instruction type isn't fitting exec type")))
 		}
 		exc.(exec.ExecIFunc)(ri)
 	case exec.ExecJFunc:
 		ri, ok := instr.(instruction.JInstruction)
 		if !ok {
-			panic(fmt.Sprintf("The instruction type isn't fitting exec type"))
+			panic(errors.New(fmt.Sprintf("The instruction type isn't fitting exec type")))
 		}
 		exc.(exec.ExecJFunc)(ri)
 	default:
-		panic(fmt.Sprintf("Internal error: exec type error"))
+		panic(errors.New(fmt.Sprintf("Internal error: exec type error")))
 	}
 }
 
 func handleErrorWhileExecuting() {
 	if err := recover(); err != nil {
 		exec.State = exec.MEMU_ERROR
-		fmt.Printf("Error %s\n", err.(string))
+		fmt.Printf("Error %s\n", err.(error).Error())
 		debug.PrintStack()
 	}
 }

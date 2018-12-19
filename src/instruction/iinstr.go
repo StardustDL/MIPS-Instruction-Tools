@@ -1,6 +1,9 @@
 package instruction
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type IInstruction struct {
 	Token  string
@@ -55,7 +58,7 @@ func (this IInstruction) ToASM() string {
 	} else if this.Opcode == OP_BGEZ || this.Opcode == OP_BGEZAL || this.Opcode == OP_BLTZ || this.Opcode == OP_BLTZAL || this.Opcode == OP_BLEZ || this.Opcode == OP_BGTZ {
 		return fmt.Sprintf("%-7s $%d, 0x%x", this.Token, this.Rs, this.Imm)
 	} else {
-		return "No this instr"
+		panic(errors.New(fmt.Sprintf("No this instr %d", this.Opcode)))
 	}
 }
 

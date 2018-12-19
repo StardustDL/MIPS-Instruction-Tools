@@ -1,78 +1,82 @@
 package assembler
 
 import (
-    "fmt"
-    // "strings"
+	"errors"
+	"fmt"
+	// "strings"
 
-    "../instruction"
+	"../instruction"
 )
 
 type AssembleConfig struct {
-    Data uint32
-    Text uint32
+	Data uint32
+	Text uint32
 }
 
-func Assemble(content []string, config AssembleConfig, size int32) ([]instruction.Instruction, []uint8, bool) {
-    segs := TrimSplitSegment(content)
+func assembleWithError(content []string, config AssembleConfig, size int32) ([]instruction.Instruction, []uint8, *error) {
+	var err error
 
-    buildBits := size > 0
+	defer func() {
+		if cr := recover(); cr != nil {
+			err = cr.(error)
+		} else {
+			err = nil
+		}
+	}()
 
-    var result []uint8
-    if buildBits {
-        result = make([]uint8, size, size)
-    } else {
-        result = make([]uint8, 0, 0)
-    }
+	segs := TrimSplitSegment(content)
 
-    retinstrs := make([]instruction.Instruction, 0)
+	buildBits := size > 0
 
-    symbolTable := make(map[string]uint32)
+	var result []uint8
+	if buildBits {
+		result = make([]uint8, size, size)
+	} else {
+		result = make([]uint8, 0, 0)
+	}
 
-    flg := true
+	retinstrs := make([]instruction.Instruction, 0)
 
-    data, hasData := segs["data"]
-    if hasData {
-        dataSeg, dataSymbols, ok := buildData(data, config, buildBits)
-        if !ok {
-            fmt.Printf("Data segment failed.")
-            flg = false
-        }
-        for k, v := range dataSymbols {
-            _, exists := symbolTable[k]
-            if exists {
-                flg = false
-                fmt.Printf("Symbol %s has been defined.\n", k)
-                break
-            }
-            symbolTable[k] = v
-        }
-        if buildBits {
-            for i, val := range dataSeg {
-                result[config.Data+uint32(i)] = val
-            }
-        }
-    }
+	symbolTable := make(map[string]uint32)
 
-    texts, hasText := segs["text"]
-    if flg && hasText {
-        instrs, ok := buildText(texts, config, symbolTable)
-        if !ok {
-            fmt.Printf("Text segment failed.")
-            flg = false
-        }
-        retinstrs = instrs
-        if buildBits {
-            for i, bits := range instruction.ToBin(instrs) {
-                for j := uint32(0); j < 4; j++ {
-                    result[config.Text+(uint32(i)<<2)+j] = uint8(bits >> (j << 3) & 0xff)
-                }
-            }
-        }
-    }
+	data, hasData := segs["data"]
+	if hasData {
+		dataSeg, dataSymbols := buildData(data, config, buildBits)
+		for k, v := range dataSymbols {
+			_, exists := symbolTable[k]
+			if exists {
+				panic(errors.New(fmt.Sprintf("Symbol %s has been defined.", k)))
+			}
+			symbolTable[k] = v
+		}
+		if buildBits {
+			for i, val := range dataSeg {
+				result[config.Data+uint32(i)] = val
+			}
+		}
+	}
 
-    if len(segs[DEFAULT_SEGMENT]) > 0 {
-        println("Warning: some instruction not in any special segment")
-    }
+	texts, hasText := segs["text"]
+	if hasText {
+		instrs := buildText(texts, config, symbolTable)
+		retinstrs = instrs
+		if buildBits {
+			for i, bits := range instruction.ToBin(instrs) {
+				for j := uint32(0); j < 4; j++ {
+					result[config.Text+(uint32(i)<<2)+j] = uint8(bits >> (j << 3) & 0xff)
+				}
+			}
+		}
+	}
 
-    return retinstrs, result, flg
+	if len(segs[DEFAULT_SEGMENT]) > 0 {
+		println("Warning: some instruction not in any special segment")
+	}
+
+	return retinstrs, result, &err
+}
+
+func Assemble(content []string, config AssembleConfig, size int32) ([]instruction.Instruction, []uint8, error) {
+	instrs, bin, err := assembleWithError(content, config, size)
+	return instrs, bin, *err
 }

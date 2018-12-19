@@ -1,15 +1,26 @@
-# MIPS-Instruction-Generator
+# MIPS Instruction Tools
 
-An experimental tool to generate instructions on MIPS architecture (MIPS-32).
+[![](https://img.shields.io/github/stars/StardustDL/MIPS-Instruction-Tools.svg?style=social&label=Stars)](https://github.com/StardustDL/MIPS-Instruction-Tools) [![](https://img.shields.io/github/forks/StardustDL/MIPS-Instruction-Tools.svg?style=social&label=Fork)](https://github.com/StardustDL/MIPS-Instruction-Tools) ![](http://progressed.io/bar/60?title=developing) [![](https://img.shields.io/github/license/StardustDL/MIPS-Instruction-Tools.svg)](https://github.com/StardustDL/MIPS-Instruction-Tools/blob/master/LICENSE)
+
+An experimental tool for MIPS architecture (MIPS-32). Now, this project contains two tools:
+
+- Assembler for MIPS-32 architecture
+- Simulator for MIPS-32 architecture
+
+Attention:
 
 - This is an experimental project for learning purposes.
 - To try these techniques: Go.
 - Created for [Experimental-MIPS-CPU](https://github.com/StardustDL/Experimental-MIPS-CPU) 
 
-Now, this project contains another two tools:
+Project Status:
 
-- Assembler for MIPS-32 architecture
-- Simulator for MIPS-32 architecture
+|||
+|-|-|
+|Repository|[![](https://img.shields.io/github/issues/StardustDL/MIPS-Instruction-Tools.svg)](https://github.com/StardustDL/MIPS-Instruction-Tools/issues/) [![](https://img.shields.io/github/issues-pr/StardustDL/MIPS-Instruction-Tools.svg)](https://github.com/StardustDL/MIPS-Instruction-Tools/pulls/)|
+|Dependencies|![](https://img.shields.io/librariesio/github/StardustDL/MIPS-Instruction-Tools.svg)|
+|Build|[![](https://img.shields.io/travis/StardustDL/MIPS-Instruction-Tools/master.svg?label=master)](https://travis-ci.org/StardustDL/MIPS-Instruction-Tools) ![](https://img.shields.io/travis/StardustDL/MIPS-Instruction-Tools/dev.svg?label=dev)|
+|Release|[![](https://img.shields.io/github/release-pre/StardustDL/MIPS-Instruction-Tools.svg)](https://github.com/StardustDL/MIPS-Instruction-Tools/releases/latest/) [![](https://img.shields.io/github/tag/StardustDL/MIPS-Instruction-Tools.svg)](https://github.com/StardustDL/MIPS-Instruction-Tools/tags)|
 
 # Use
 
@@ -81,7 +92,7 @@ Count: 51
 
 ## Assembler pseudo-instruction
 
-Count: 12
+Count: 14
 
 - li
 - la
@@ -93,6 +104,8 @@ Count: 12
 - bnez
 - nop
 - move
+- push
+- pop
 - call
 - ret
 

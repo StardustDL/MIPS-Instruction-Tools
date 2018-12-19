@@ -75,11 +75,12 @@ func testAssemble() {
 	// ENTRY := uint32(0x00400000)
 	// instrs, bin, ok := ass.Assemble(content, ass.AssembleConfig{Data: 0x10010000, Text: ENTRY}, -1)
 	ENTRY := uint32(0x00001000)
-	instrs, bin, ok := ass.Assemble(content, ass.AssembleConfig{Data: 0x00003000, Text: ENTRY}, 0x4000)
-	if ok {
+	instrs, bin, err := ass.Assemble(content, ass.AssembleConfig{Data: 0x00003000, Text: ENTRY}, 0x4000)
+	if err == nil {
 		println("done")
 	} else {
 		println("failed")
+		println(err.Error())
 		return
 	}
 

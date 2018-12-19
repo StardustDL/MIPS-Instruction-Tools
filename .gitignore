@@ -18,3 +18,5 @@
 /src/test
 
 .vscode
+
+.travis.yml

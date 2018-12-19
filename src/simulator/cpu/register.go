@@ -2,6 +2,7 @@ package cpu
 
 import (
     "fmt"
+    "errors"
 )
 
 var regs [32]uint32
@@ -33,17 +34,17 @@ func SetLO(val uint32){
 
 func SetGPR(id uint8, val uint32) {
     if !(0 <= id && id < 32) {
-        panic(fmt.Sprintf("Register set failed %d", id))
+        panic(errors.New(fmt.Sprintf("Register set failed %d", id)))
     }
     if id == 0 && val != 0{
-        panic(fmt.Sprintf("Try to set $zero to %d", val))
+        panic(errors.New(fmt.Sprintf("Try to set $zero to %d", val)))
     }
     regs[id] = val
 }
 
 func GetGPR(id uint8) uint32 {
     if !(0 <= id && id < 32) {
-        panic(fmt.Sprintf("Register get failed %d", id))
+        panic(errors.New(fmt.Sprintf("Register get failed %d", id)))
     }
     return regs[id]
 }

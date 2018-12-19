@@ -1,6 +1,8 @@
 package exec
 
 import (
+	"errors"
+
 	"../../instruction"
 	"../cpu"
 )
@@ -57,7 +59,7 @@ func beforeCallSet(rd uint8) {
 
 func signext(ori uint32, len uint8) uint32 {
 	if !(len == 1 || len == 2 || len == 4) {
-		panic("signext: Len error")
+		panic(errors.New("signext: Len error"))
 	}
 	result := uint32(ori)
 	result <<= len << 3
@@ -88,7 +90,7 @@ func UpdatePC() {
 	}
 }
 
-func InitializeTable(breakH SignalHandler,syscallH SignalHandler) {
+func InitializeTable(breakH SignalHandler, syscallH SignalHandler) {
 	ExecTable = map[string]interface{}{
 		"add":     ExecRFunc(add),
 		"addu":    ExecRFunc(addu),

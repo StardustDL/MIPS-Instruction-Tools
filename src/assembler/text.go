@@ -1,6 +1,7 @@
 package assembler
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -391,7 +392,7 @@ func textPreprocessOne(syntax InstructionSyntax) ([]InstructionSyntax, bool) {
 	return []InstructionSyntax{syntax}, false
 }
 
-func TextParse(syntax InstructionSyntax, resolver SymbolResolver, nextPC uint32) (instruction.Instruction, bool) {
+func textParseOne(syntax InstructionSyntax, resolver SymbolResolver, nextPC uint32) (instruction.Instruction, bool) {
 	args := resolver(syntax.args)
 	switch syntax.symbol {
 	case "add":
@@ -683,9 +684,8 @@ func TextParse(syntax InstructionSyntax, resolver SymbolResolver, nextPC uint32)
 	return nil, false
 }
 
-func buildText(content []string, config AssembleConfig, symbolTable map[string]uint32) ([]instruction.Instruction, bool) {
+func buildText(content []string, config AssembleConfig, symbolTable map[string]uint32) []instruction.Instruction {
 	result := make([]instruction.Instruction, 0)
-	flg := true
 
 	symbolResWithoutError := func(args []Token) []Token {
 		for i, item := range args {
@@ -707,46 +707,35 @@ func buildText(content []string, config AssembleConfig, symbolTable map[string]u
 		for k, v := range textSymbols {
 			_, exists := symbolTable[k]
 			if exists {
-				flg = false
-				fmt.Printf("Symbol %s has been defined.\n", k)
-				break
+				panic(errors.New(fmt.Sprintf("Symbol %s has been defined.", k)))
 			}
 			symbolTable[k] = v
 		}
 	} else {
-		fmt.Printf("Text prepocessing failed.\n")
-		flg = false
+		panic(errors.New(fmt.Sprintf("Text prepocessing failed.")))
 	}
-
-	if flg {
-		symbolRes := func(args []Token) []Token {
-			for i, item := range args {
-				if item.class == TC_SYMBOL {
-					val, ok := symbolTable[item.symbol]
-					if ok {
-						args[i] = Token{TC_IMM, val, item.symbol}
-					} else {
-						fmt.Printf("No this symbol: %s\n", item.symbol)
-					}
+	symbolRes := func(args []Token) []Token {
+		for i, item := range args {
+			if item.class == TC_SYMBOL {
+				val, ok := symbolTable[item.symbol]
+				if ok {
+					args[i] = Token{TC_IMM, val, item.symbol}
+				} else {
+					fmt.Printf("No this symbol: %s\n", item.symbol)
 				}
 			}
-			return args
 		}
-
-		currentAddr := uint32(config.Text)
-		for _, syn := range syntaxs {
-			res, ok := TextParse(syn, symbolRes, currentAddr+4)
-			if !ok {
-				flg = false
-				fmt.Printf("Parse failed: %s\n", syn.symbol)
-				for i, tk := range syn.args {
-					println(i, ":", tk.class, tk.value, tk.symbol)
-				}
-				break
-			}
-			result = append(result, res)
-			currentAddr += 4
-		}
+		return args
 	}
-	return result, flg
+
+	currentAddr := uint32(config.Text)
+	for _, syn := range syntaxs {
+		res, ok := textParseOne(syn, symbolRes, currentAddr+4)
+		if !ok {
+			panic(errors.New(fmt.Sprintf("Parse failed: %s\n", syn.symbol)))
+		}
+		result = append(result, res)
+		currentAddr += 4
+	}
+	return result
 }
