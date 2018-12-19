@@ -1,5 +1,9 @@
 package main
 
+import (
+	"os"
+)
+
 func main() {
-	cliMain()
+	os.Exit(cliMain())
 }

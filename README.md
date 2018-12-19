@@ -2,10 +2,11 @@
 
 [![](https://img.shields.io/github/stars/StardustDL/MIPS-Instruction-Tools.svg?style=social&label=Stars)](https://github.com/StardustDL/MIPS-Instruction-Tools) [![](https://img.shields.io/github/forks/StardustDL/MIPS-Instruction-Tools.svg?style=social&label=Fork)](https://github.com/StardustDL/MIPS-Instruction-Tools) ![](http://progressed.io/bar/60?title=developing) [![](https://img.shields.io/github/license/StardustDL/MIPS-Instruction-Tools.svg)](https://github.com/StardustDL/MIPS-Instruction-Tools/blob/master/LICENSE)
 
-An experimental tool for MIPS architecture (MIPS-32). Now, this project contains two tools:
+An experimental tool for MIPS architecture (MIPS-32, Little-Endian). Now, this project contains two tools:
 
 - Assembler for MIPS-32 architecture
 - Simulator for MIPS-32 architecture
+- Simple dumper for MIPS-32 architecture
 
 Attention:
 
@@ -24,8 +25,11 @@ Project Status:
 
 # Use
 
+- Before use these commands, update `Makefile` to fit your system
+
 ```sh
-make run
+make build
+cd bin ; ./mif
 ```
 
 # Instructions

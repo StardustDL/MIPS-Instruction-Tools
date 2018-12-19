@@ -6,6 +6,7 @@ import (
 	"os"
 
 	ass "./assembler"
+	dum "./dumper"
 	ins "./instruction"
 	sim "./simulator"
 )
@@ -75,6 +76,15 @@ Usage: mip [options] as/sim/dump [inputFile]
 Options:
 `)
 	flag.PrintDefaults()
+	fmt.Fprintf(os.Stderr, `
+Examples:
+Assemble:
+$ mip -asm output.asm -bin output.bin -mif output.mif -data 0x3000 -text 0x1000 -size 0x4000 as input.asm
+Simulate:
+$ mip -bin output.bin -entry 0x1000 sim
+Dump:
+$ mip -asm output.asm -bin output.bin -text 0x1000 -size 0x1000 dump
+`)
 }
 
 func cliMain() int {
@@ -93,7 +103,7 @@ func cliMain() int {
 	flag.Int64Var(&fullSize, "size", -1, "Full size of program, negtive for no bin data")
 	flag.Usage = usage
 
-	flag.Parse()	
+	flag.Parse()
 
 	if helpFlag {
 		flag.Usage()
@@ -162,12 +172,48 @@ func cliMain() int {
 		println("Executed:", flg)
 		fmt.Println("Registers")
 		sim.ShowRegisters()
+		return 0
 	case "dump":
-		fmt.Printf("Not support this function now")
-		return -1
+		if binFile == "" {
+			fmt.Printf("Please give the bin file name.")
+			return -1
+		}
+		content, err := readAllBytes(binFile)
+		if err != nil {
+			fmt.Printf("File %s reading error: %v\n", binFile, err)
+			return -1
+		}
+		print("Dumping...")
+		from := textSegment
+		bin := make([]uint32, 0)
+		for i := 0; i < int(fullSize); i += 4 {
+			var result uint32 = 0
+			for j := 0; j < 4; j++ {
+				result |= uint32(content[uint32(from)+uint32(i+j)]) << (uint32(j) << 3)
+			}
+			bin = append(bin, result)
+		}
+		instrs := dum.DumpText(bin)
+		println("done")
+		strs := toASMs(instrs)
+		for i, s := range strs {
+			strs[i] = fmt.Sprintf("0x%08x: %s", uint32(from)+uint32(i), s)
+		}
+		if asmFile != "" {
+			err = writeAllLines(asmFile, strs)
+			if err != nil {
+				println("Generate asm file failed", err)
+				return -1
+			}
+			println("ASM file:", asmFile)
+		} else {
+			for _, s := range strs {
+				println(s)
+			}
+		}
+		return 0
 	default:
 		println("No this verb.")
 		return -1
 	}
-	return 0
 }
