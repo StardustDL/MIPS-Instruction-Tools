@@ -4,7 +4,7 @@ import (
     "fmt"
 )
 
-const MEMORY_SIZE uint32 = 0x2000
+const MEMORY_SIZE uint32 = 0x8000
 
 var memory [MEMORY_SIZE]uint8
 

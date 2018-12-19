@@ -11,6 +11,9 @@ func retrieveCode() uint32 {
 }
 
 func syscall(it rinstr) {
+    if IsDebug{
+        println("system call",cpu.GetGPR(instruction.GPR_V0))
+    }
     doSystemCall(cpu.GetGPR(instruction.GPR_V0))
 }
 

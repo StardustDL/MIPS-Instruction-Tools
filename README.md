@@ -21,7 +21,7 @@ make run
 
 See [here](https://www.mips.com/?do-download=mips32-instruction-set-quick-reference-v1-01) and [here](https://www.mips.com/products/architectures/mips32-3/)
 
-Count: 50
+Count: 51
 
 - add
 - addu
@@ -30,6 +30,7 @@ Count: 50
 - sub
 - subu
 - lui
+- mul
 - mult
 - multu
 - div
@@ -80,7 +81,7 @@ Count: 50
 
 ## Assembler pseudo-instruction
 
-Count: 10
+Count: 12
 
 - li
 - la
@@ -92,6 +93,8 @@ Count: 10
 - bnez
 - nop
 - move
+- call
+- ret
 
 ## To append
 

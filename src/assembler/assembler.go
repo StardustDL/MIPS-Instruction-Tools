@@ -12,10 +12,6 @@ type AssembleConfig struct {
     Text uint32
 }
 
-func getInstruction(text string) instruction.Instruction {
-    return instruction.CreateJ("", 0, 0)
-}
-
 func Assemble(content []string, config AssembleConfig, size int32) ([]instruction.Instruction, []uint8, bool) {
     segs := TrimSplitSegment(content)
 

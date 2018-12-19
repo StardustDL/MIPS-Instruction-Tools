@@ -10,13 +10,13 @@ import (
 func readAllLines(path string) ([]string, error) {
     file, err := os.OpenFile(path, os.O_RDONLY, 0666)
     if err != nil {
-        return make([]string, 0), err
+        return nil, err
     }
     defer file.Close()
 
     _, err = file.Stat()
     if err != nil {
-        return make([]string, 0), err
+        return nil, err
     }
 
     buf := bufio.NewReader(file)
@@ -58,13 +58,13 @@ func writeAllLines(path string, content []string) error {
 func readAllBytes(path string) ([]byte, error) {
     file, err := os.OpenFile(path, os.O_RDONLY, 0666)
     if err != nil {
-        return make([]byte, 0), err
+        return nil, err
     }
     defer file.Close()
 
     _, err = file.Stat()
     if err != nil {
-        return make([]byte, 0), err
+        return nil, err
     }
 
     buf := bufio.NewReader(file)
