@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	ass "./assembler"
-	emu "./emulator"
-	"./emulator/cpu"
+	sim "./simulator"
+	"./simulator/cpu"
 	ins "./instruction"
 )
 
@@ -118,18 +118,18 @@ func testAssemble() {
 		return
 	}
 
-	print("Initializing for emulating...")
-	if !emu.Initialize(bin, breakHandler, nil) {
+	print("Initializing for simulating...")
+	if !sim.Initialize(bin, breakHandler, nil) {
 		println("failed")
 		return
 	}
 	println("done")
 
 	println("Executing...")
-	flg := emu.Execute(ENTRY, false)
+	flg := sim.Execute(ENTRY, false)
 	println("Executed", flg)
 	fmt.Println("Registers")
-	emu.ShowRegisters()
+	sim.ShowRegisters()
 }
 
 func main() {
