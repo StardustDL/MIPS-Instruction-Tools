@@ -3,6 +3,7 @@ package assembler
 import (
 	"errors"
 	"fmt"
+
 	// "strings"
 
 	"../instruction"
@@ -13,8 +14,19 @@ type AssembleConfig struct {
 	Text uint32
 }
 
-func assembleWithError(content []string, config AssembleConfig, size int32) ([]instruction.Instruction, []uint8, *error) {
-	var err error
+type Segment struct {
+	Start uint32
+	End   uint32
+}
+
+type AssembleResult struct {
+	Full Segment
+	Data Segment
+	Text Segment
+	Bin  []uint8
+}
+
+func assembleWithError(content []string, config AssembleConfig, size int32) (retinstrs []instruction.Instruction, asresult AssembleResult, err error) {
 
 	defer func() {
 		if cr := recover(); cr != nil {
@@ -23,6 +35,14 @@ func assembleWithError(content []string, config AssembleConfig, size int32) ([]i
 			err = nil
 		}
 	}()
+
+	dataEnd := config.Data
+	textEnd := config.Text
+
+	realSize := uint32(0)
+	if size > 0 {
+		realSize = uint32(size)
+	}
 
 	segs := TrimSplitSegment(content)
 
@@ -35,7 +55,7 @@ func assembleWithError(content []string, config AssembleConfig, size int32) ([]i
 		result = make([]uint8, 0, 0)
 	}
 
-	retinstrs := make([]instruction.Instruction, 0)
+	retinstrs = make([]instruction.Instruction, 0)
 
 	symbolTable := make(map[string]uint32)
 
@@ -49,6 +69,7 @@ func assembleWithError(content []string, config AssembleConfig, size int32) ([]i
 			}
 			symbolTable[k] = v
 		}
+		dataEnd = config.Data + uint32(len(dataSeg))
 		if buildBits {
 			for i, val := range dataSeg {
 				result[config.Data+uint32(i)] = val
@@ -60,6 +81,7 @@ func assembleWithError(content []string, config AssembleConfig, size int32) ([]i
 	if hasText {
 		instrs := buildText(texts, config, symbolTable)
 		retinstrs = instrs
+		textEnd = config.Text + (uint32(len(instrs)) << 2)
 		if buildBits {
 			for i, bits := range instruction.ToBin(instrs) {
 				for j := uint32(0); j < 4; j++ {
@@ -72,11 +94,11 @@ func assembleWithError(content []string, config AssembleConfig, size int32) ([]i
 	if len(segs[DEFAULT_SEGMENT]) > 0 {
 		println("Warning: some instruction not in any special segment")
 	}
-
-	return retinstrs, result, &err
+	asresult = AssembleResult{Segment{0, realSize}, Segment{config.Data, dataEnd}, Segment{config.Text, textEnd}, result}
+	return retinstrs, asresult, err
 }
 
-func Assemble(content []string, config AssembleConfig, size int32) ([]instruction.Instruction, []uint8, error) {
-	instrs, bin, err := assembleWithError(content, config, size)
-	return instrs, bin, *err
+func Assemble(content []string, config AssembleConfig, size int32) ([]instruction.Instruction, AssembleResult, error) {
+	instrs, result, rerr := assembleWithError(content, config, size)
+	return instrs, result, rerr
 }

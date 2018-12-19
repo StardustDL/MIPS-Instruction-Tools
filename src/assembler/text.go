@@ -40,10 +40,10 @@ func getRegisterToken(val string) Token {
 		id = uint32(0)
 	} else {
 		ind := strings.Index(regNames, name)
-		if ind != -1 {
+		if len(name)==2 && ind != -1 && ind % 2 == 0{
 			id = uint32(ind/2 + 1)
 		} else {
-			panic(fmt.Sprintf("No this register: %s\n", name))
+			panic(errors.New(fmt.Sprintf("No this register: %s", name)))
 		}
 	}
 	return Token{TC_REG, id, val}
